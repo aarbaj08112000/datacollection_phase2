@@ -1,0 +1,90 @@
+Build No : 24
+Multiple Unit support changes
+
+================================
+Latest Prod Build No: 23
+---------------------------------------------------------------------------------------------------------------
+Build 21: 29/03/2024: 
+		Financial Year changes
+		GENERIC SALES INVOICE FORMAT NO FOR ALL.
+		Remove customized Sales invoice numbers and keep it generic
+		Consignee can be added (Under Customer)
+		Sales Invoice changes for Consignee(For Shipping Address)
+		Sales Invoice Multiple Unit Support.
+		Sales Invoice PDF and View invoice changes for Consignee Address.
+		Sales Invoice Changes - Eway-bill and Evoice changes for for Consignee Address.
+		AROM-85-2 : Multiple Unit support - Initial chanegs for Molding production changes
+		Sales Invoice Changes - Bold for Billing and Shipping Customer/Consignee Name
+		FG stock can accept decimal - FG Stock - Material can be in KG (so can be with decimal points)
+		Dashboard Initial changes for Financial Year
+		
+
+Build 20: 20/02/2024: 
+		AROM-94: Show UOM in Add/VIew Supplier Part price page.
+		AROM-68: Show Document/Format no on different pages
+		AROM-105: Molding production changes
+		AROM-99: Change name of GRN accept/reject to Inward Inspection
+
+Build 19: 18/02/2024: 
+		AROM-85-1: Support for multiple units - merged to common ERP
+		AROM-113: Packaging sticker updates.
+
+
+Build 18: 11/02/2024: 
+		AROM-96A: Sales Invoice changes and Einvoice details in sales invoice.
+		AROM-49:  Cancel invoice support for non einvoice sales.
+		AROM-49:  Sales export for cancel invoices, for Tally
+		AROM-105: OEE correction
+		AROM-102: Global Configuration menu to manage different customer settings like PDI, Customer name details etc.
+		
+Build 17: 28/1/2024: 
+		AROM-102: Define Global configuration to manage different customer or AROM configuration. Display it based on roles.
+		DB: 45-Configurations.sql
+		AROM-45: PDI configuration for Customer to manage it.
+		
+Build 16: 27/1/2024: 
+		AROM-82: Material Request - Consider BOM.
+		43-GRN_Number-uniqueness.sql
+		44-Material_Request_Data_Migration.sql
+		AROM-101: GRN generate and software calcualated amount issue when loading/unloading charges are there
+		AROM-67: Mold master - performance issue fixes		
+			
+Build 15: 17/1/2024: 
+		AROM-98: stock transfer from stores to stores
+
+Build 14: 15/01/2024
+		AROM-23: Receivables & payable report is required & show due amount on dashboard
+		AROM-67: Mold life report (PM & life over)
+
+Build 13: 14/01/2024
+		Bug: PO loading, unloading and frighting amounts are getting set as blank
+		AROM-27: GRN invoice no and PO no uniqueness
+		
+Build 12: 04/01/2024 8PM
+		AROM-85: Support for New client unit. Updates related to Client Unit, Stock, Inwarding and GRN.
+		
+Build 11: 29/12/2023 9PM
+		AROM-87: Need to change current sales format for SP and AIM
+		
+Build 10: 29/12/2023
+		AROM-75-A: Sales Invice sticker printing.
+
+Build 9: 18/12/2023
+		AROM-82: update the inwarding qty in case the quantity is wrong
+		AROM-81: Inward Inspection: Provision to enter 5 observations like PDI (varchar - optional)
+		AROM-79: PO, Sales, GRN and subcon, sales rejection, shop order numbeing based on Financial year
+		CUST-2: Change labels like production hours to minutes and add Lumps to lable for wastage
+		CUST-1:  Rejection- Add Cavity as new option field on rejection page
+		PROD-10: Allow Amendment even if it is already done to allow update on qty
+
+
+Build 8: 03/12/2023
+		 AROM-69: Changes for Planning and Shop order		
+		 AROM-75: Packaging qty validation temporarily removed from Sale part add
+		 
+Build 7: 23/11/2023
+		AROM-45: Changes for PDI inspection and report
+		AROM-80: Report changes for PO Summary
+		
+Build 6: Changes for PDI inspection and report		14/10/2023
+Build 5: Production fixes for sales controller		05/10/2023
