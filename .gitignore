@@ -1,4 +1,4 @@
 application/config/database.php
 application/config/config.php
 application/views/templates_c/*
-application/public/uploads/*
+public/uploads/*
