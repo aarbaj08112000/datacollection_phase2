@@ -21,26 +21,26 @@
           <span ><%$school_name%></span>
         </div>
       </nav>
-
+      <%assign var=roles value=["ChannelPartner","Employee","School"]%>
       <div class="dt-top-btn d-grid gap-2 d-md-flex justify-content-md-end mb-5">
-          <%if $images_available == "Yes" && $session_data['role'] neq 'ChannelPartner' && $session_data['role'] neq 'Employee' %>
+          <%if $images_available == "Yes" && !in_array($session_data['role'],$roles)%>
          <a class="btn btn-danger delete-imgs" type="button" title="Delete All Images"  href="javascript:void(0)">Delete All Images</a>
          <%/if%>
          <%if $page_name eq 'data_collection_list'%>
-           <%if $session_data['role'] neq 'ChannelPartner' && $session_data['role'] neq 'Employee' %>
+           <%if !in_array($session_data['role'],$roles) %>
          <a class="btn btn-seconday card-generated-row" type="button" title="Card Generated" href="javascript:void(0)">Card Generated</a>
          <%/if%>
         <a class="btn btn-seconday export-ids" type="button" title="Download All Id Cards" href="javascript:void(0)"><i class="ti ti-id-badge-2"></i></a>
          <%if $file_column_exist && $session_data['role'] neq 'Employee' && $images_available == "Yes"%> 
           <a class="btn btn-seconday export-images" type="button" title="Download All images" href="javascript:void(0)"><i class="ti ti-photo-down"></i></a> 
          <%/if%>
-        <%if $session_data['role'] neq 'ChannelPartner' && $session_data['role'] neq 'Employee' %>
+        <%if checkGroupAccess("data_collection_list","export","No") %>
          <!-- <button class="btn btn-seconday" type="button" id="downloadCSVBtn" title="Download CSV"><i class="ti ti-file-type-csv"></i></button> -->
          <button class="btn btn-seconday" type="button" id="downloadEXCELBtn" title="Download Excel"><i class="ti ti-file-type-xls"></i></button>
           <button class="btn btn-seconday" type="button" id="downloadPDFBtn" title="Download PDF"><i class="ti ti-file-type-pdf"></i></button>
           <%/if%>
          <%/if%>
-          <button type="button" class="btn btn-seconday refresh-filter"  title="Add process">
+          <button type="button" class="btn btn-seconday refresh-filter"  title="Refresh">
             <i class="ti ti-refresh"></i>
          </button> 
           <button class="btn btn-seconday filter-icon" title="Filter" type="button"><i class="ti ti-filter" ></i></i></button>

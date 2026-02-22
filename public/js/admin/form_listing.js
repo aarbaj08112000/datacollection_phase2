@@ -367,6 +367,8 @@ const page = {
             "createdRow": function(row, data, dataIndex) {
                 if (data.status === "Active") {
                     $(row).addClass('active-row'); // Add class for active rows
+                }else if(data.status === "Pending Approval"){
+                    $(row).addClass('pending-row');
                 }else{
                     $(row).addClass('inactive-row');
                 } 

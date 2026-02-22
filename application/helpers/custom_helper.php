@@ -83,6 +83,8 @@ function dbFormDate($date ='',$format = ""){
             return $dateTime->format('d/m/Y H:i:s');
         }
     }
+    $date = $str == "" || $str == null ? display_no_character() : display_no_character();
+    return $date;
 }
 
 function checkGroupAccess($page_url = "",$type = "",$redirect ="Yes"){
@@ -171,8 +173,24 @@ function NoDataFoundMessage($module_name =""){
     return $html;
 }
 
+function getStatusTitle($status = ""){
+    
+    switch ($status) {
+        case 'PendingApproval':
+            $displayStatus = "Pending Approval";
+            break;
+        
+        default:
+            $displayStatus = $status;
+            break;
+    }
+    return $displayStatus;
+}
+
 function createFolder($folderPath = ""){
+    
     if (!is_dir($folderPath) && $folderPath != "") {
+        // pr($folderPath,1);
         mkdir($folderPath, 0777, true);
     }
 }
@@ -235,7 +253,151 @@ function sent_otp($otp = "",$mobile_number=""){
         // Close cURL session
         curl_close($ch);
         // exit();
-    }
+}
+function sent_link_approved($user_name = "",$mobile_number=""){
+        // Endpoint URL
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms";
+        $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
+        
+      
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your link is approved. You may now use the link. BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        // Check for errors
+        if(curl_errno($ch)) {
+            echo 'Error while doing digital signature : ' . curl_error($ch);
+            exit();
+        }
+    
+        // Close cURL session
+        curl_close($ch);
+        // exit();
+}
+function sent_link_generated($user_name = "",$mobile_number=""){
+        // Endpoint URL
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms";
+        $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
+        
+      
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your link is under approval. You will receive an update after approval. BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        // Check for errors
+        if(curl_errno($ch)) {
+            echo 'Error while doing digital signature : ' . curl_error($ch);
+            exit();
+        }
+    
+        // Close cURL session
+        curl_close($ch);
+        // exit();
+}
+function sent_approved_account($user_name = "",$mobile_number=""){
+        // Endpoint URL
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms";
+        $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
+        
+      
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your account has been successfully approved. You can now log in and start using our services. BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        // Check for errors
+        if(curl_errno($ch)) {
+            echo 'Error while doing digital signature : ' . curl_error($ch);
+            exit();
+        }
+    
+        // Close cURL session
+        curl_close($ch);
+        // exit();
+}
+function sent_registration_completed($user_name = "",$mobile_number=""){
+        // Endpoint URL
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms";
+        $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
+        
+      
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your registration has been successfully completed. Your account is under approval. You will be notified once approval is completed. BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        // Check for errors
+        if(curl_errno($ch)) {
+            echo 'Error while doing digital signature : ' . curl_error($ch);
+            exit();
+        }
+    
+        // Close cURL session
+        curl_close($ch);
+        // exit();
+}
+function sent_registration_otp($otp = "",$mobile_number=""){
+        // Endpoint URL
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms";
+        $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
+        
+      
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear User, your OTP for registration is $otp. Do not share it with anyone. BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        // Check for errors
+        if(curl_errno($ch)) {
+            echo 'Error while doing digital signature : ' . curl_error($ch);
+            exit();
+        }
+    
+        // Close cURL session
+        curl_close($ch);
+        // exit();
+}
+function sent_msg($message = "",$mobile_number=""){
+        // Endpoint URL
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms";
+        $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
+        
+      
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode($message) . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        // Check for errors
+        if(curl_errno($ch)) {
+            echo 'Error while doing digital signature : ' . curl_error($ch);
+            exit();
+        }
+    
+        // Close cURL session
+        curl_close($ch);
+        // exit();
+}
 
 
 

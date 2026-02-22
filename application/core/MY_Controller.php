@@ -16,8 +16,9 @@ class MY_Controller extends MX_Controller
     $controller_route = $this->uri->rsegments[1];
     $route_string = explode ('/',$routes_arr[$current_route]);
     $current_folder = $route_string[0];
+    $controller_route_name = $route_string[1];
     $this->current_folder = $current_folder;
-    $this->checkEntryAuth($current_folder,$controller_route,$current_route);
+    $this->checkEntryAuth($current_folder,$controller_route_name,$current_route);
     $this->setConfigSetting();
     // setting smarty template.
     $this->smarty->setTemplateDir(APPPATH.'modules/'.$current_folder.'/views/');
@@ -37,7 +38,7 @@ class MY_Controller extends MX_Controller
       $admin_allow_arr = array(
             'user' => array(
                 'login' => array(
-                    'login','forgot_password'
+                    'login','forgot_password','registration'
                 ),
                 'form' => array(
                   'submit_form','form'
@@ -45,7 +46,6 @@ class MY_Controller extends MX_Controller
               
             )
       );
-      // pr($admin_allow_arr,1);
       if(isset($admin_allow_arr[$current_folder][$controller_route])){
         if(!in_array($current_route, $admin_allow_arr[$current_folder][$controller_route])){
             redirect(base_url("login"));

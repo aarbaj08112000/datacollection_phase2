@@ -77,6 +77,7 @@
                                     <option value="Admin">Admin</option>
                                     <option value="Employee">Employee</option>
                                     <option value="ChannelPartner">Channel Partner</option>
+                                    <option value="School">School</option>
                                     </select>
                                  </div>
                                  <div class="form-group">
@@ -146,7 +147,7 @@
                                  <td><%$u['user_mobile_number'] %></td>
                                  <td><%$u['user_password'] %></td>
                                  <td><%$u['user_role'] %></td>
-                                 <td><%$u['status'] %></td>
+                                 <td class="text_<%strtolower($u['status']) %>"><%$u['status'] %></td>
                                  <td>
                                     <a data-bs-toggle="modal" data-bs-target="#updatePromo<%$i%>" title="Edit"><i class="ti ti-edit"></i></a>
                                     <div class="modal fade" id="updatePromo<%$i%>" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -188,6 +189,7 @@
                                                             <option value="Admin" <%if $u['user_role'] eq 'Admin'%>selected<%/if%>>Admin</option>
                                                             <option value="Employee" <%if $u['user_role'] eq 'Employee'%>selected<%/if%>>Employee</option>
                                                             <option value="ChannelPartner" <%if $u['user_role'] eq 'ChannelPartner'%>selected<%/if%>>Channel Partner</option>
+                                                            <option value="School" <%if $u['user_role'] eq 'School'%>selected<%/if%>>School</option>
                                                         </select>
                                                      </div>
                                                    </div>
@@ -221,13 +223,14 @@
                                                      </div>
                                                    </div>
                                                    <div class="col-6">
-                                                    
+                                                      <input type="hidden" value="<%$u['status']%>" name="old_status"/>
                                                      <div class="form-group" >
                                                         <label for="on click url" class="w-100">Status<span class="text-danger">*</span> </label> <br>
                                                         <select name="status" class="form-control select2-multiple required-input"  >
                                                            <option value="Active" <%if $u['status'] eq 'Active'%>selected<%/if%>>Active</option>
                                                            <option value="Inactive" <%if $u['status'] eq 'Inactive'%>selected<%/if%>>Inactive</option>
                                                            <option value="Block" <%if $u['status'] eq 'Block'%>selected<%/if%>>Block</option>
+                                                           <option value="Active" <%if $u['status'] eq 'Pending'%>selected<%/if%>>Pending</option>
                                                         </select>
                                                      </div>
                                                     </div>
@@ -335,6 +338,19 @@
    }
    .select2-container--default .select2-selection--multiple .select2-selection__choice {
    background-color: var(--bs-theme-light4-color) !important;
+   }
+   .text_active {
+      color: rgb(11, 216, 11) !important;
+   }
+   .text_inactive {
+      color: #FA6262 !important;
+   }
+
+   .text_block {
+      color: #FFB8B8 !important;
+   }
+   .text_pending {
+      color: #B6B5FF !important;
    }
 </style>
 <script type="text/javascript">

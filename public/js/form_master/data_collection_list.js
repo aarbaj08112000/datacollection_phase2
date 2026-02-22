@@ -323,16 +323,13 @@ const page = {
                         $(node).attr('title', 'Download Pdf');
                     },
                     filename: file_name,
+                    orientation: 'landscape',
                     customize: function (doc) {
                       doc.pageMargins = [15, 15, 15, 15];
                       doc.content[0].text = pdf_title;
                       doc.content[0].color = theme_color;
                         
-                        if(order_acceptance_enable == "Yes"){
-                                    doc.content[1].table.widths = ['15%', '13%','10%', '10%', '15%','10%', '10%', '13%'];
-                                }else{
-                                    doc.content[1].table.widths = ['15%', '15%', '15%', '15%','15%', '15%'];
-                                }
+                        
                         doc.content[1].table.body[0].forEach(function(cell) {
                             cell.fillColor = theme_color;
                         });
@@ -351,12 +348,11 @@ const page = {
                                 }
                                 cell.alignment = alignment;
                             });
-                            if(order_acceptance_enable == "Yes"){
-                                    row.splice(8, 4);
-                                }else{
-                                    row.splice(6, 4);
-                                }
+                            row.pop();
+                            
                         });
+                        var colCount = doc.content[1].table.body[0].length;
+                        doc.content[1].table.widths = Array(colCount).fill('10%')
                     }
                 },
                 {
@@ -365,6 +361,17 @@ const page = {
                   titleAttr: 'Download Excel',
                   filename: file_name,
                    customizeData: function (data) {
+                    data.header.shift();
+                    data.header.pop();
+                    data.body.forEach(function(row){
+                      row.shift();
+                      row.pop();
+                    });
+
+                    // optional: remove from footer if exists
+                    if (data.footer && data.footer.length) {
+                      data.footer.pop();
+                    }
                     $('#form_data_listing tbody tr').each(function (rowIndex) {
                       $(this).find('td').each(function (colIndex) {
                         let $info = $(this).find(".image-info");

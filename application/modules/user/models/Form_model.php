@@ -6,9 +6,12 @@ class Form_model extends CI_Model {
     public function __construct() {
         parent::__construct();
     }
-    public function getFieldData(){
+    public function getFieldData($allowFileds = []){
         $this->db->select('f.*');
         $this->db->from('form_field_master as f');
+        if(is_array($allowFileds) && count($allowFileds) > 0){
+            $this->db->where_in('f.form_field_master_id', $allowFileds);
+        }
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
         return $ret_data;
@@ -38,7 +41,7 @@ class Form_model extends CI_Model {
         $this->db->from('school_matser sm');
         $this->db->join('form_data_collection as fdc','fdc.school_master_id = sm.school_id','left');
         $this->db->join('userinfo as ua','ua.id = sm.channel_patner_id','left');
-        if($this->session->userdata("role") == "ChannelPartner"){
+        if($this->session->userdata("role") == "ChannelPartner" || $this->session->userdata("role") == "School"){
             $this->db->where('sm.channel_patner_id',$this->session->userdata("user_id"));
         }
         $this->db->where('sm.is_delete',$is_deleted);
@@ -87,8 +90,8 @@ class Form_model extends CI_Model {
         $this->db->select('COUNT(sm.school_id) as total_record');
         $this->db->from('school_matser sm');
         $this->db->join('userinfo as ua','ua.id = sm.channel_patner_id','left');
-        if($this->session->userdata("role") == "ChannelPartner"){
-            $this->db->where('sm.added_by',$this->session->userdata("user_id"));
+        if($this->session->userdata("role") == "ChannelPartner" || $this->session->userdata("role") == "School"){
+            $this->db->where('sm.channel_patner_id',$this->session->userdata("user_id"));
         }
         $this->db->where('sm.is_delete',$is_deleted);
         if (!empty($search_params['value'])) {
@@ -290,7 +293,7 @@ class Form_model extends CI_Model {
                     if($value['key'] != "sr_no" && $value['key'] != "card_generated"){
                         $name= $value['key'];
                         $val= $value['val'];
-                        $this->db->where("fd.form_data LIKE '%\"$name\":\"$val%' ESCAPE '!'", null, false);
+                        $this->db->where("fd.form_data LIKE '%\"$name\": \"$val%' ESCAPE '!'", null, false);
                     }else if($value['key'] == "card_generated"){
                         $name= $value['key'];
                         $val= $value['val'];
@@ -328,13 +331,17 @@ class Form_model extends CI_Model {
         $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
         return $ret_data;
     }
-    public function get_school_data(){
+    public function get_school_data($date = ""){
         
-        $this->db->select('sm.*,COUNT(fdc.school_master_id) as total_record,u.user_name as channel_patner_name');
+        $this->db->select('sm.*,COUNT(fdc.school_master_id) as total_record,u.user_name as channel_patner_name,ua.user_role');
         $this->db->from('school_matser sm');
         $this->db->join('form_data_collection as fdc','fdc.school_master_id = sm.school_id','left');
         $this->db->join('userinfo as u','u.id = sm.channel_patner_id','left');
+        $this->db->join('userinfo as ua','ua.id = sm.added_by','left');
         $this->db->where("sm.is_delete",0);
+        if($date != "" && $date != null){
+            $this->db->where("DATE(sm.added_date) =", $date);
+        }
         $this->db->group_by('sm.school_id');
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
@@ -434,6 +441,15 @@ class Form_model extends CI_Model {
         $this->db->select('idd.design_data as design_data,idd.background_image,idd.width,idd.height,col_per_row');
         $this->db->from('id_card_designs as idd');
         $this->db->where("idd.entity_id",$school_id);
+        $result_obj = $this->db->get();
+        $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
+        return $ret_data;
+    }
+    public function getGroupdFieldData($group_code = ""){
+        $this->db->select('gfc.*');
+        $this->db->from('group_master as g');
+        $this->db->join('group_field_config as gfc','gfc.group_master_id = g.group_master_id','left');
+        $this->db->where("g.group_code",$group_code);
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
         return $ret_data;

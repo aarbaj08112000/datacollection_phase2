@@ -123,19 +123,19 @@
         <div class="row">
         
         <input type="hidden" name="school_id" value="<%$school_data['school_id']%>" />
-          <div class="col-md-4">
+          <div class="col-md-4 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="name" class="form-label fs-6">Name<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="school_name" placeholder="Enter your name" name="name" value="<%$school_data['name']%>">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-4 hide">
             <label for="url" class="form-label fs-6">URL<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="url" placeholder="Enter your website" name="url" value="<%$school_data['url']%>" readonly>
           </div>
-          <div class="col-md-4 mt-3">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
             <div class="radio-box">
             <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
             <br>
-            <div class="form-check form-check-inline">
+            <div class="form-check form-check-inline ">
               <input class="form-check-input" type="radio" name="form_heder_type"  value="school" <%if $school_data['form_type'] eq 'school'%>checked<%/if%>>
               <label class="form-check-label" for="inlineRadio2">School</label>
             </div>
@@ -149,15 +149,15 @@
             </div>
             </div>
           </div>
-          <div class="col-md-4 mt-3">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="url" class="form-label fs-6">Contact Person<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control"  placeholder="Enter contact person" name="contact_person" value="<%$school_data['contact_person']%>">
           </div>
-          <div class="col-md-4 mt-3">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="url" class="form-label fs-6">Mobile Number<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control onlyNumericInput"  placeholder="Enter mobile number" name="mobile_number" value="<%$school_data['mobile_number']%>">
           </div>
-          <div class="col-md-4 mt-3">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="url" class="form-label fs-6">Designation<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control"  placeholder="Enter designation" name="designation" value="<%$school_data['designation']%>">
           </div>
@@ -179,9 +179,9 @@
             <input id="houseToken" type="text" class="form-control autocomplete" placeholder="Select house" name="house" />
             </div>
           </div>
-          <div class="col-md-4 mt-3 ">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-6">Channel Patner<span class="text-danger ms-1"></span></label>
+            <label for="url" class="form-label fs-6">Channel Patner<span class="text-danger ms-1"></span></label><br>
             <select class=" select2"  name="channel_patner_id">
                 <option value="">Select Channel Patner</option>
                 <%foreach from=$channel_patner key=key item="values"%>
@@ -190,7 +190,7 @@
             </select>
             </div>
           </div>
-          <div class="col-md-4 mt-3 ">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
           <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">Address<span class="text-danger ms-1"></span></label>
             <textarea name="address" class="form-control textarea" id="the-textarea" maxlength="300" placeholder="Enter Address"autofocus><%$school_data['address']%></textarea>
@@ -216,7 +216,7 @@
             </div>
           </div>
         </div>
-          <div class="col-md-4 mt-3">
+          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="image" class="form-label fs-6">Upload School/Collage/Office Logo<span class="text-danger ms-1">*</span></label>
             <input type="file" class="form-control" id="image" name="image" >
             <input type="hidden" class="form-control" id="image_old" name="image_old" value="<%$school_data['image']%>">
@@ -224,10 +224,10 @@
                 <img src="<%$school_data['image']%>" class="rounded" width="70" height="70">
             </div>
           </div>
-          <div class="col-md-4 mt-3">
+          <input type="hidden" class="form-control"  name="template_old" value="<%$school_data['display_template']%>">
+          <div class="col-md-4 mt-3 hide">
             <label for="url" class="form-label fs-6">Display Template<span class="text-danger ms-1">*</span></label>
             <input type="file" class="form-control"  placeholder="Enter designation" name="template">
-            <input type="hidden" class="form-control"  name="template_old" value="<%$school_data['display_template']%>">
             <div class="mt-2 edit-template">
                 <img src="<%$school_data['display_template']%>" class="rounded" width="70" height="70">
             </div>
@@ -278,6 +278,16 @@
           right: -7px;
           width: 22px;
           height: 22px;
+      }
+
+      .select2-container {
+          width: 298px !important;
+          margin: auto;
+          margin-top: 0px !important;
+      }
+      .select2-container .selection{
+         width: 298px !important;
+         display: block;
       }
     </style>
     <script type="text/javascript">

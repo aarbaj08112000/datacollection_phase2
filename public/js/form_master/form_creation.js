@@ -3,7 +3,7 @@ $( document ).ready(function() {
     
 });
 var courseToken = "";
-
+var redirect_url = "";
 const page = {
     init: function(){
         $("#sortable").sortable({
@@ -20,6 +20,10 @@ const page = {
                $(this).parents(".form-check").find(".added-check").prop("checked",true);
           }																					
        })
+       $(".payment-conform").on("click",function(){
+          	window.location.href = redirect_url;																		
+       })
+       
         this.initTokenInput();
     },
     formInitiate: function(){
@@ -32,9 +36,9 @@ const page = {
                     image: {
                         required: true
                     },
-                    url: {
-                        required: true
-                    },
+                    // url: {
+                    //     required: true
+                    // },
                     form_heder_type :{
                     	 required: true
                     },
@@ -49,9 +53,9 @@ const page = {
                     designation :{
                        required: true
                     },
-                    template :{
-                       required: true
-                    },
+                    // template :{
+                    //    required: true
+                    // },
                     course :{
                        required: true
                     },
@@ -155,7 +159,12 @@ const page = {
 					          if (data.success == 1) {
 					              toaster("success",data.messages);
 					              setTimeout(function () {
-					                window.location.href = data.redirect_url;
+                                    if(data.payment_qr != ""){
+                                        redirect_url = data.redirect_url;
+                                        $("#deleteImg").modal("show");
+                                    }else{
+                                        window.location.href = data.redirect_url;
+                                    }
 					            }, 2000);
 					          }else{
 					            toaster("error",data.messages);

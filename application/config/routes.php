@@ -10,10 +10,11 @@ $route['page_not_found'] = 'user/user/page_not_found_view';
 $route['login'] = 'user/login/index';
 $route['forgot_password/(:any)/(:any)'] = 'user/login/forgot_password/$1/$2';
 $route['logout'] = 'user/login/logout';
+$route['registration'] = 'user/login/registration';
 
 /* admin */
 $route['sitemap'] = 'user/login/site_map';
-$route['dashboard'] = 'user/login/dashboard';
+$route['dashboard'] = 'dashboard/dashboard/dashboard';
 $route['user_list'] = 'user/user/user_list';
 $route['group_master'] = 'user/user/groupMaster';
 $route['group_menu'] = 'user/user/groupMenu';
@@ -51,4 +52,22 @@ $route['idcard/designer/(:num)'] = 'user/form/designer/$1';
 $route['idcard/save'] = 'user/form/save';
 
 
+/* Configuration Settings */
+$route['config_setting_list'] = 'user/configration/configSettingList';
+$route['config_setting_list_data'] = 'user/configration/configSettingListData';
+$route['get_config_setting'] = 'user/configration/getConfigSetting';
+$route['update_config_setting'] = 'user/configration/updateConfigSetting';
+$route['add_config_setting'] = 'user/configration/addConfigSetting';
+
+/* Field Selection Module */
+$route['field_selection_list'] = 'user/configration/fieldSelectionList';
+$route['field_selection_list_data'] = 'user/configration/fieldSelectionListData';
+$route['configure_group_fields/(:num)'] = 'user/configration/configureGroupFields/$1';
+$route['save_group_field_config'] = 'user/configration/saveGroupFieldConfig';
+$route['get_group_field_config'] = 'user/configration/getGroupFieldConfig';
+
+
+/* dashboard route */
+
+$route['get_dashboard_widget_data'] = 'dashboard/dashboard/get_dashboard_widget_data';
 

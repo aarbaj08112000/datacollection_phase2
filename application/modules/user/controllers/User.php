@@ -23,9 +23,11 @@ class User extends MY_Controller {
 
 	public function user_list()
 	{
+		$get_data = $this->input->get();
+		$type = isset($get_data['type']) && $get_data['type'] != "" && $get_data['type'] != null ? $get_data['type'] : "";
 		$data['client'] = $this->User_model->getClientData();
         $data['groups'] = $this->User_model->getGroupData();
-		$data['user_info'] = $this->User_model->getUserData();
+		$data['user_info'] = $this->User_model->getUserData($type);
 		$data['no_data_message'] = NoDataFoundMessage("user");
 		$this->smarty->loadView('user_details.tpl', $data,'Yes','Yes');
 	}
@@ -87,6 +89,7 @@ class User extends MY_Controller {
         $status = $this->input->post('status');
         $groups  = $this->input->post("groups");
 		$user_role  = $this->input->post("user_role");
+		$old_status  = $this->input->post("old_status");
 		$user_password = $this->input->post("user_password");
         if( is_valid_array($groups)){//is_valid_array($client_arr) &&
             $data = array(
@@ -107,6 +110,9 @@ class User extends MY_Controller {
             $result = $this->User_model->updateUserData($data, $id);
             if ($result) {
                 if ($result) {
+					if($old_status == "Pending" && $status == "Active"){
+						sent_approved_account($data['user_name'],$data['user_mobile_number']);
+					}
                     // echo "<script>alert('User  Added Successfully');document.location='erp_users'</script>";
                     $msg = 'User Updated Successfully.';
                 } else {

@@ -13,10 +13,19 @@ class User_model extends CI_Model {
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
         return $ret_data;
     }
-    public function getUserData(){
+    public function getUserData($type= ""){
         $this->db->select('u.*');
         $this->db->from('userinfo as u');
         $this->db->where("u.user_role !=","SuperAdmin");
+        if($type != "" && $type != null){
+            if($type == "employee"){
+                $this->db->where("u.user_role","Employee");
+            }else if($type == "channel_patner"){
+                $this->db->where("u.user_role","ChannelPartner");
+            }else if($type == "school"){
+                $this->db->where("u.user_role","School");
+            } 
+        }
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
         return $ret_data;

@@ -4,6 +4,45 @@ $( document ).ready(function() {
 var filter_enable =  false;
 var dashbord = {
   init: function(){
+    $(".overall-school").on("keyup",function(){
+        var value = $(this).val();
+        $(".overall-box ").each(function( index ) {
+            var school = $(this).find(".school-title").html();
+            var channel = $(this).find(".channel-title").html();
+            if(!((school.toLowerCase()).indexOf(value.toLowerCase()) != -1) && !((channel.toLowerCase()).indexOf(value.toLowerCase()) != -1)){
+                $(this).hide();
+            }else{
+                $(this).show();
+            }
+        });
+    })
+    $(".channel-patner-school").on("keyup",function(){
+        var value = $(this).val();
+        $(".channel-patner-box ").each(function( index ) {
+            var school = $(this).find(".school-title").html();
+            var channel = $(this).find(".channel-title").html();
+            if(!((school.toLowerCase()).indexOf(value.toLowerCase()) != -1) && !((channel.toLowerCase()).indexOf(value.toLowerCase()) != -1)){
+                $(this).hide();
+            }else{
+                $(this).show();
+            }
+        });
+    })
+    $(".search-school").on("keyup",function(){
+        var value = $(this).val();
+        $(".school-box ").each(function( index ) {
+            var school = $(this).find(".school-title").html();
+            var channel = $(this).find(".channel-title").html();
+            if(!((school.toLowerCase()).indexOf(value.toLowerCase()) != -1) && !((channel.toLowerCase()).indexOf(value.toLowerCase()) != -1)){
+                $(this).hide();
+            }else{
+                $(this).show();
+            }
+        });
+    })
+    setInterval(() => {
+        window.location.reload();
+    }, 300000);
     this.initiatePluggin();
     let tab_name  = $(".dashboard-nav-tab .nav-link").attr("data-tab");//"BusinessAnalytics";
     this.getCurrentWidget(tab_name,'','');
@@ -88,7 +127,7 @@ var dashbord = {
     // let tab_name = $(".tab-pane.active.show").attr("data-tab");
       $.ajax({
           type: "POST",
-          url: "dashboard/get_dashboard_widget_data",
+          url: "get_dashboard_widget_data",
           data: {
               tab_name: tab_name,
               widget_name:widget_name,

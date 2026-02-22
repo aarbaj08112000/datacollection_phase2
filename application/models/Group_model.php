@@ -15,6 +15,7 @@ class Group_model extends CI_Model {
         $groups = explode(",",$session['groups']);
         if(is_valid_array($groups)){
             $group_rights_data = $this->getGroupAccessList($groups,$page_url);
+            // pr($group_rights_data,1);
             if(is_valid_array($group_rights_data)){
                 $group_rights = array_values($group_rights_data);
                 $group_rights = $group_rights[0];

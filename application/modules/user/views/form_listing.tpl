@@ -75,6 +75,7 @@
                              <select name="status" class="form-control select2" id="s_status">
                                <option value="Active">Active</option>
                                <option value="Inactive">Inactive</option>
+                               <option value="PendingApproval">Pending Approval</option>
                              </select>
                            </div>
                            </div>
@@ -232,6 +233,9 @@
     }
     .active-row .status {
         color: #5ded5d;
+    }
+    .pending-row .status {
+        color: #B6B5FF;
     }
   </style>
     <script type="text/javascript">

@@ -5,6 +5,7 @@ use Dompdf\Dompdf;
 class Form extends MY_Controller {
     public function __construct() {
         parent::__construct();
+        // sent_registration_completed("jasvd asdjd","8485835691");
         $this->load->model('Form_model');
         require_once(APPPATH.'libraries/tcpdf/tcpdf.php');
     }
@@ -14,9 +15,31 @@ class Form extends MY_Controller {
     public function form_creation()
     {
         $data = [];
-        $data['field_data'] = $this->Form_model->getFieldData();
-        $data['channel_patner'] = $this->Form_model->getChannelPatnerList();
         // pr($data,1);
+        $data['user_role'] = $user_role = $this->session->userdata("role");
+        $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
+        $allowFileds = isset($allowFieldData['selected_fields']) && count($allowFieldData['selected_fields']) ? json_decode($allowFieldData['selected_fields']) : [];
+        if($user_role == "ChannelPartner"){
+            $data['user_id'] = $this->session->userdata("user_id");
+        }
+        $data['field_data'] = $this->Form_model->getFieldData($allowFileds);
+        $data['channel_patner'] = $this->Form_model->getChannelPatnerList();
+        $school_data = $this->session->userdata("extra_json");
+        // pr($school_data,1);
+        if(count($school_data) > 0 && $user_role == "School"){
+            $data["school_data"] = $school_data = $this->session->userdata("extra_json");
+            $name = $school_data['school_name'];
+            $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
+            $str = preg_replace('/\s+/', '_', $str);
+            $name = strtoupper($str);
+            $data['url'] = $user_role == "School" ? $name."_STUDENT_".date("d_M_Y_h_i_s_A") : $name."_STAFF_".date("d_M_Y_h_i_s_A");
+            $data["contact_person"] = $this->session->userdata("user_name");
+            $data["mobile_number"] = $this->session->userdata("user_mobile_number");
+        }
+        // pr($this->session->userdata(),1);
+        $data['payment_qr'] = base_url($this->config->item("linkPaymentQr"));
+        $data['whats_app_number'] = $this->config->item("whatsAppNumber");
+        // pr($data['payment_qr'],1);
         $this->smarty->loadView('form.tpl', $data,'Yes','Yes');
     }
     public function form_creation_edit()
@@ -30,9 +53,12 @@ class Form extends MY_Controller {
             $feild = json_decode($value['field_data'],TRUE);
             $form_selected_feild_arr[$feild['form_field_master_id']] = $value['required'];
         }
+        $user_role = $this->session->userdata("role");
+        $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
+        $allowFileds = isset($allowFieldData['selected_fields']) && count($allowFieldData['selected_fields']) ? json_decode($allowFieldData['selected_fields']) : [];
        
         $data['form_selected_feild'] =$field_data= $form_selected_feild_arr;
-        $data['field_data'] =  $this->Form_model->getFieldData();
+        $data['field_data'] =  $this->Form_model->getFieldData($allowFileds);
         $data['channel_patner'] = $this->Form_model->getChannelPatnerList();
         $indexing_field = [];
         
@@ -72,25 +98,33 @@ class Form extends MY_Controller {
             $index++;
         }
         $data['indexing_field'] = $indexing_field;
+        $data['user_role'] = $user_role = $this->session->userdata("role");
+        if($user_role == "ChannelPartner"){
+            $data['user_id'] = $this->session->userdata("user_id");
+        }
         $this->smarty->loadView('form_edit.tpl', $data,'Yes','Yes');
     }
 
     public function formListing()
     {
+        // $this->generateStudentIdCard();
         $current_route = $this->uri->segment(1);
         checkGroupAccess($current_route,"list","Yes");
-        $column[] = [
-            "data" => "image",
-            "title" => "Image",
-            "width" => "5%",
-            "className" => "dt-center",
-        ];
-        $column[] = [
-            "data" => "name",
-            "title" => "Name",
-            "width" => "10%",
-            "className" => "dt-left",
-        ];
+        $user_role = $this->session->userdata("role");
+        if($user_role != "School"){
+            $column[] = [
+                "data" => "image",
+                "title" => "Image",
+                "width" => "5%",
+                "className" => "dt-center",
+            ];
+            $column[] = [
+                "data" => "name",
+                "title" => "Name",
+                "width" => "10%",
+                "className" => "dt-left",
+            ];
+        }
         $column[] = [
             "data" => "url",
             "title" => "Url",
@@ -227,7 +261,7 @@ class Form extends MY_Controller {
 
     public function formListingData(){
         $post_data = $this->input->post();
-        
+        $user_role = $this->session->userdata("role");
         $column_index = array_column($post_data["columns"], "data");
         $order_by = "";
         foreach ($post_data["order"] as $key => $val) {
@@ -259,12 +293,14 @@ class Form extends MY_Controller {
                         <i class="ti ti-eye"></i>
                     </a>
                 </span>';
-                $data[$key]['action'] .= '
-                 <span title="Edit Image">
-                    <a href="'.base_url().'data_collection_image_list/'.$val['school_id'].'" >
-                        <i class="ti ti-photo-up"></i>
-                    </a>
+                if(!in_array($user_role,["School"])){
+                    $data[$key]['action'] .= '
+                    <span title="Edit Image">
+                        <a href="'.base_url().'data_collection_image_list/'.$val['school_id'].'" >
+                            <i class="ti ti-photo-up"></i>
+                        </a>
                 </span>';
+                }
             }
             if($is_deleted == 0){
             $data[$key]['action'] .= '
@@ -280,34 +316,46 @@ class Form extends MY_Controller {
                     <i class="ti ti-edit"></i>
                     </a>';
                 }
-                if($is_deleted == 0){
-                    $data[$key]['action'] .='<span class="recycle-school" title="Rescycle Bin" data-id="'.$val['school_id'].'">
-                    <i class="ti ti-trash"></i>
-                    </span>';
-                }else{
-                    $data[$key]['action'] .='<span class="delete-school" title="Delete" data-id="'.$val['school_id'].'">
+                if(checkGroupAccess("form_listing","delete","No")){
+                    if($is_deleted == 0){
+                        $data[$key]['action'] .='<span class="recycle-school" title="Rescycle Bin" data-id="'.$val['school_id'].'">
                         <i class="ti ti-trash"></i>
-                    </span><span class="restore-school" title="Restore" data-id="'.$val['school_id'].'">
-                        <i class="ti ti-refresh"></i>
-                    </span>';
+                        </span>';
+                    }else{
+                        $data[$key]['action'] .='<span class="delete-school" title="Delete" data-id="'.$val['school_id'].'">
+                            <i class="ti ti-trash"></i>
+                        </span><span class="restore-school" title="Restore" data-id="'.$val['school_id'].'">
+                            <i class="ti ti-refresh"></i>
+                        </span>';
+                    }
                 }
 
                 if($is_deleted == 0){
-                    $data[$key]['action'] .= '
-                <span class="status-school" title="Change Status" data-status="'.$val['status'].'" data-id="'.$val['school_id'].'">
-                    <i class="ti ti-clock"></i>
-                </span>
-                    <span class="upload-school-data" title="Import Data"  data-id="'.$val['school_id'].'">
-                        <i class="ti ti-upload"></i>
-                    </span>
-                    <a href="idcard/designer/' . $val['school_id'] . '" title="Change template">
-                        <span class="" data-id="' . $val['school_id'] . '">
-                            <i class="ti ti-template"></i>
-                        </span>
-                            </a>
-            ';
+                    if(!in_array($user_role,["ChannelPartner","School"])){
+                        $data[$key]['action'] .= '
+                        <span class="status-school" title="Change Status" data-status="'.$val['status'].'" data-id="'.$val['school_id'].'">
+                            <i class="ti ti-clock"></i>
+                        </span>';
+                    }
+                    if(checkGroupAccess("form_listing","import","No")){
+                        $data[$key]['action'] .= '  
+                            <span class="upload-school-data" title="Import Data"  data-id="'.$val['school_id'].'">
+                                <i class="ti ti-upload"></i>
+                            </span>
+                            ';
+                    }
+                    if(!in_array($user_role,["School"])){
+                    $data[$key]['action'] .= '  
+                            <a href="idcard/designer/' . $val['school_id'] . '" title="Change template">
+                                <span class="" data-id="' . $val['school_id'] . '">
+                                    <i class="ti ti-template"></i>
+                                </span>
+                                    </a>
+                        ';
+                    }
+                }
             }
-        }
+            $data[$key]['status'] = getStatusTitle($val['status']);
         }
         
         
@@ -348,7 +396,12 @@ class Form extends MY_Controller {
     public function change_status(){
         $post_data = $this->input->post();
         $update_data = ["status"=>$post_data['status']];
+        $school_data = $this->Form_model->getSchoolFormCollectionDetail($post_data['school_id']);
+        $old_status = $school_data['status'];
         $this->Form_model->updateSchoolData($update_data,$post_data['school_id']);
+        if($old_status == "PendingApproval" && $post_data['status'] == "Active"){
+            sent_link_approved($school_data['name'],$school_data['mobile_number']);
+        }
         $ret_arr['messages'] = "Status updated successfully.";
         $ret_arr['success'] = 1;
         echo json_encode($ret_arr);
@@ -429,6 +482,15 @@ class Form extends MY_Controller {
                 "className" => "search dt-center"
             ];
         }
+
+        $column[] = [
+            "data" => "added_date",
+            "title" => "Added Date",
+            "width" => "15%",
+            "className" => "dt-center"
+        ];
+
+
         if($file_column_exist || true){
             $column[] = [
                 "data" => "action",
@@ -558,6 +620,7 @@ class Form extends MY_Controller {
                          $row_value[$val['data']] .= '<a  class="me-2 edit-image-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i '.$extra_style.' class="ti ti-photo-up" title="Edit"></i>';
                     }
                 }
+                $row_value['added_date'] = getDefaultDateTime($value['added_date']);
                 $row_value['card_generated'] = $value['card_generated'];
                 
 
@@ -753,9 +816,51 @@ class Form extends MY_Controller {
     {
 
         $post_data = $this->input->post();
+        $form_type = $this->input->post('form_heder_type');
+        $school_data = $this->session->userdata("extra_json");
+        // $user_role = "Admin";
+        $user_role = $this->session->userdata("role");
+        $url = $post_data['url'];
+        $status = "Active";
+        if($user_role == "ChannelPartner"){
+            $name = $school_data['school_name'];
+            $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
+            $str = preg_replace('/\s+/', '_', $str);
+            $name = strtoupper($str);
+            $form_heder_type = $form_type == "office" ? "STAFF" : "STUDENT";
+            $school_name_val = $this->input->post('name');
+            $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
+            $school_name = preg_replace('/\s+/', '_', $school_name);
+            $school_name = strtoupper($school_name);
+            // pr($name,1);
+            $post_data['url'] = $url = $name."_".$school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $template_details = [
+                "school_name" => $school_name_val,
+                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "channelPartner" => $school_data['school_name'],
+            ];
+            $status = "PendingApproval";
+            
+        }else{
+            $form_heder_type = $form_heder_type == "office" ? "STAFF" : "STUDENT";
+            $school_name_val = $this->input->post('name');
+            $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
+            $school_name = preg_replace('/\s+/', '_', $school_name);
+            $school_name = strtoupper($school_name);
+            // pr($name,1);
+            $post_data['url'] = $url = $school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $template_details = [
+                "school_name" => $school_name_val,
+                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "channelPartner" => $school_data['school_name']
+            ];
+        }
         
         $school_master_data = $this->Form_model->checkDublicateUrl($post_data['url']);
         $school_master_data = is_valid_array($school_master_data) ? $school_master_data : [];
+        
+        
+        
         if(count($school_master_data) == 0){
             $course_value = $post_data['course'];
             $section_value = $post_data['section'];
@@ -784,46 +889,62 @@ class Form extends MY_Controller {
             }
 
             /* collage logo */
-            $profileImageData = $_FILES["image"]["name"] != "" ? $_FILES["image"] : [];
-            $config["upload_path"] = "public/uploads/school_image/";
-            $config["allowed_types"] = "jpg|jpeg|png|bmp|heic"; 
-            $this->load->library("upload", $config);
-            $this->upload->initialize($config);
             $upload_error_msg = [];
             $school_image = "";
-            if (!empty($profileImageData)) {
-                if (!$this->upload->do_upload("image")) {
-                    $upload_error_msg = $error = [
-                        "error" => $this->upload->display_errors(),
-                    ];
-                    $upload_error = 1;
-                } else {
-                    $upload_data = $this->upload->data();
-                    $school_image = "public/uploads/school_image/".$upload_data['file_name'];
+            if($user_role == "School"){
+                $school_image = $school_data['school_logo'];
+                $post_data['channel_patner_id'] = $this->session->userdata('user_id');
+                $status = "PendingApproval";
+            }else{
+                $profileImageData = $_FILES["image"]["name"] != "" ? $_FILES["image"] : [];
+                $config["upload_path"] = "public/uploads/school_image/";
+                $config["allowed_types"] = "jpg|jpeg|png|bmp|heic"; 
+                $this->load->library("upload", $config);
+                $this->upload->initialize($config);
+                if (!empty($profileImageData)) {
+                    if (!$this->upload->do_upload("image")) {
+                        $upload_error_msg = $error = [
+                            "error" => $this->upload->display_errors(),
+                        ];
+                        $upload_error = 1;
+                    } else {
+                        $upload_data = $this->upload->data();
+                        $school_image = "public/uploads/school_image/".$upload_data['file_name'];
+                    }
                 }
             }
 
-            /* template image */
-            $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
-            $config["upload_path"] = "public/uploads/form_template_img/";
-            createFolder($config["upload_path"]);
-            $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";
-            $this->load->library("upload", $config);
-            $this->upload->initialize($config);
-            $template_error_msg = [];
-            $template_image = [];
-            
-            if (!empty($profileImageData)) {
-                if (!$this->upload->do_upload("template")) {
-                    $template_error_msg = $error = [
-                        "error" => $this->upload->display_errors(),
-                    ];
-                    $template_error = 1;
-                } else {
-                    $template_data = $this->upload->data();
-                    $template_image = "public/uploads/form_template_img/".$template_data['file_name'];
+            $template_image = "";
+            if(!(count($upload_error_msg) > 0 || count($template_error_msg) > 0)){
+                $template_details['school_image'] = $school_image;
+                if($user_role == "ChannelPartner" ){
+                    $template_image = $this->generateFormChanelPartTemplate($template_details); 
+                }else{
+                    $template_image = $this->generateFormSchoolTemplate($template_details); 
                 }
             }
+            
+            // /* template image */
+            // $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
+            // $config["upload_path"] = "public/uploads/form_template_img/";
+            // createFolder($config["upload_path"]);
+            // $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";
+            // $this->load->library("upload", $config);
+            // $this->upload->initialize($config);
+            // $template_error_msg = [];
+            // $template_image = [];
+            
+            // if (!empty($profileImageData)) {
+            //     if (!$this->upload->do_upload("template")) {
+            //         $template_error_msg = $error = [
+            //             "error" => $this->upload->display_errors(),
+            //         ];
+            //         $template_error = 1;
+            //     } else {
+            //         $template_data = $this->upload->data();
+            //         $template_image = "public/uploads/form_template_img/".$template_data['file_name'];
+            //     }
+            // }
 
             $ret_arr = [];
             $msg ='Something went wrong';
@@ -837,8 +958,8 @@ class Form extends MY_Controller {
                 $data = array(
                         'name' => $this->input->post('name'),
                         'image' => $school_image,
-                        'url' => $this->input->post('url'),
-                        'form_type' => $this->input->post('form_heder_type'),
+                        'url' => $url,
+                        'form_type' => $form_type,
                         "contact_person" => $post_data['contact_person'],
                         "mobile_number" => $post_data['mobile_number'],
                         "designation" => $post_data['designation'],
@@ -851,12 +972,17 @@ class Form extends MY_Controller {
                         'added_by' => $this->session->userdata('user_id'),
                         "channel_patner_id" => $post_data['channel_patner_id'],
                         "address" => $post_data['address'],
-                        "comment" => $post_data['comment']
+                        "comment" => $post_data['comment'],
+                        "status" => $status
                 );
                 // pr($data,1);
                 $inser_query = $this->Form_model->insertSchoolData($data);
+                // pr($this->db->last_query(),1);
                 if ($inser_query) {
                     if ($inser_query) {
+                        if($status == "PendingApproval"){
+                            sent_link_generated($this->input->post('name'),$post_data['mobile_number']);
+                        }
                         $success = 1;
                         $msg = 'School date added successfully.';
                     }
@@ -866,6 +992,11 @@ class Form extends MY_Controller {
             $success = 0;
             $msg = 'URL must be unique.';
         }
+        $payment_qr = "";
+        if(in_array($user_role,["School","ChannelPartner"])){
+            $payment_qr = $this->config->item("linkPaymentQr");
+        }
+        $ret_arr['payment_qr'] = $payment_qr;
         $ret_arr['redirect_url'] = base_url("form_listing");
         $ret_arr['messages'] = $msg;
         $ret_arr['success'] = $success;
@@ -874,9 +1005,54 @@ class Form extends MY_Controller {
 
     public function updateFromData()
     {
-
+        
         $post_data = $this->input->post();
-        // pr($post_data,1);
+        $template_old = FCPATH.$post_data['template_old'];
+        if (file_exists($template_old)) {
+            unlink($template_old);
+        }
+        $form_type = $this->input->post('form_heder_type');
+        $school_data = $this->session->userdata("extra_json");
+        $user_role = $this->session->userdata("role");
+        $url = $post_data['url'];
+        if($user_role == "ChannelPartner"){
+            $name = $school_data['school_name'];
+            $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
+            $str = preg_replace('/\s+/', '_', $str);
+            $name = strtoupper($str);
+            $form_heder_type = $form_type == "office" ? "STAFF" : "STUDENT";
+            $school_name_val = $this->input->post('name');
+            $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
+            $school_name = preg_replace('/\s+/', '_', $school_name);
+            $school_name = strtoupper($school_name);
+            // pr($name,1);
+            $post_data['url'] = $url = $name."_".$school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $template_details = [
+                "school_name" => $school_name_val,
+                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "channelPartner" => $school_data['school_name'],
+            ];
+            // $post_data['channel_patner_id'] = $this->session->userdata('user_id');
+            
+        }else{
+            $form_heder_type = $form_heder_type == "office" ? "STAFF" : "STUDENT";
+            $school_name_val = $this->input->post('name');
+            $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
+            $school_name = preg_replace('/\s+/', '_', $school_name);
+            $school_name = strtoupper($school_name);
+            // pr($name,1);
+            $post_data['url'] = $url = $school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $template_details = [
+                "school_name" => $school_name_val,
+                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "channelPartner" => $school_data['school_name']
+            ];
+        }
+
+        if($user_role == "School"){
+            $post_data['channel_patner_id'] = $this->session->userdata('user_id');
+        }
+
         $course_value = $post_data['course'];
             $section_value = $post_data['section'];
             $house_value = $post_data['house'];
@@ -930,27 +1106,43 @@ class Form extends MY_Controller {
                 $school_image = $post_data['image_old'];
             }
            
-            /* template image */
-            $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
-            $config["upload_path"] = "public/uploads/form_template_img/";
-            createFolder($config["upload_path"]);
-            $config["allowed_types"] = "jpg|jpeg|png|bmp|heic";
-            $this->load->library("upload", $config);
-            $this->upload->initialize($config);
-            $template_error_msg = [];
-            $template_image = [];
+            // /* template image */
+            // $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
+            // $config["upload_path"] = "public/uploads/form_template_img/";
+            // createFolder($config["upload_path"]);
+            // $config["allowed_types"] = "jpg|jpeg|png|bmp|heic";
+            // $this->load->library("upload", $config);
+            // $this->upload->initialize($config);
+            // $template_error_msg = [];
+            // $template_image = [];
             
-        if (!empty($profileImageData)) {
-            if (!$this -> upload -> do_upload("template")) {
-                $template_error_msg = $error = ["error" => $this -> upload -> display_errors()];
-                $template_error = 1;
-            } else {
-                $template_data = $this -> upload -> data();
-                $template_image = "public/uploads/form_template_img/".$template_data['file_name'];
+            // if (!empty($profileImageData)) {
+            //     if (!$this -> upload -> do_upload("template")) {
+            //         $template_error_msg = $error = ["error" => $this -> upload -> display_errors()];
+            //         $template_error = 1;
+            //     } else {
+            //         $template_data = $this -> upload -> data();
+            //         $template_image = "public/uploads/form_template_img/".$template_data['file_name'];
+            //     }
+            // } else {
+            //     $template_image = $post_data['template_old'];
+            // }
+
+            $template_image = "";
+            if(!(count($upload_error_msg) > 0 || count($template_error_msg) > 0)){
+                $template_details['school_image'] = $school_image;
+                if($user_role == "ChannelPartner" ){
+                    $template_image = $this->generateFormChanelPartTemplate($template_details); 
+                }else{
+                    $template_image = $this->generateFormSchoolTemplate($template_details); 
+                }
+                $template_old = FCPATH.$post_data['template_old'];
+               
+                if (file_exists($template_old)) {
+                    unlink($template_old);
+                }
             }
-        } else {
-            $template_image = $post_data['template_old'];
-        }
+
         $ret_arr = [];
         $msg = 'Something went wrong';
         $success = 0;
@@ -961,10 +1153,10 @@ class Form extends MY_Controller {
             $msg .= "Only jpg,jpeg,png,bmp,heic file type allowed";
         } else {
             $data = array(
-                'name' => $this -> input -> post('name'),
+                'name' => $this->input->post('name'),
                 'image' => $school_image,
-                'url' => $this -> input -> post('url'),
-                'form_type' => $this -> input -> post('form_heder_type'),
+                'url' => $url,
+                'form_type' => $form_type,
                 "contact_person" => $post_data['contact_person'],
                 "mobile_number" => $post_data['mobile_number'],
                 "designation" => $post_data['designation'],
@@ -974,7 +1166,7 @@ class Form extends MY_Controller {
                 "house" => $post_data['house'],
                 'from_field' => json_encode($form_field_data, TRUE),
                 'added_date' => date("Y-m-d H:i:s"),
-                'added_by' => $this -> session -> userdata('user_id'),
+                'added_by' => $this->session->userdata('user_id'),
                 'channel_patner_id' => $post_data['channel_patner_id'],
                 'address' => $post_data['address'],
                 'comment' => $post_data['comment']
@@ -1363,6 +1555,7 @@ class Form extends MY_Controller {
     }
 
     public function download_all_ids(){
+        
         // ini_set('display_errors', 1);
         // ini_set('display_startup_errors', 1);
         // error_reporting(E_ALL);  
@@ -1378,6 +1571,7 @@ class Form extends MY_Controller {
         $id_card_data = [];
         $data_collection = [];
         $arry_key = -1;
+        
         
         foreach ($from_data_collection_data as $ke => $val) {
             $form_details = json_decode($val['form_data'],TRUE);
@@ -1417,50 +1611,80 @@ class Form extends MY_Controller {
         }
        // testing starts
         $design_data = $this->Form_model->getIdCardFieldComp($school_id);
-        $fieldsConfig = json_decode($design_data['design_data'],true);
-        $config_arr = array_column($fieldsConfig,'type');
-        $image_index = array_search('image',$config_arr);
-        $image_height = $fieldsConfig[$image_index]['height'] .'px';
-        $image_width = $fieldsConfig[$image_index]['width'].'px';
-        $students = [];
-        $chuck_data = $design_data['col_per_row'];
-       
-    foreach ($id_card_data as $row) {
-        foreach ($row as $student) {
-            // Create key-value pairs for student data
-            $studentData = [];
-            $student['other_data'][]= ["key" => "sr_no" ,"value" => $student['sr_no']];
-            foreach ($student['other_data'] as $item) {
-                $studentData[$item['key']] = $item['value'];
-                $studentData['image'] = '<img style="object-fit: contain; height: '.$image_height.'; width: '.$image_width.';" src="'.$student['image'].'">';
+        
+        if(count($design_data) > 0){
+            $fieldsConfig = json_decode($design_data['design_data'],true);
+            $config_arr = array_column($fieldsConfig,'type');
+            $image_index = array_search('image',$config_arr);
+            $image_height = $fieldsConfig[$image_index]['height'] .'px';
+            $image_width = $fieldsConfig[$image_index]['width'].'px';
+            $students = [];
+            $chuck_data = $design_data['col_per_row'];
+        
+            foreach ($id_card_data as $row) {
+                foreach ($row as $student) {
+                    // Create key-value pairs for student data
+                    $studentData = [];
+                    $student['other_data'][]= ["key" => "sr_no" ,"value" => $student['sr_no']];
+                    foreach ($student['other_data'] as $item) {
+                        $studentData[$item['key']] = $item['value'];
+                        $studentData['image'] = '<img style="object-fit: contain; height: '.$image_height.'; width: '.$image_width.';" src="'.$student['image'].'">';
+                    }
+                    $students[] = $studentData;
+                }
             }
-            $students[] = $studentData;
-        }
-    }
-    $tem_pte = ['fieldsConfig' => $fieldsConfig,
-            'students' => array_chunk($students, $chuck_data),
-            'fieldMapping' => $fieldMapping,
-            'backgroundImage' => base_url('/public/design_backgrounds/'.$design_data['background_image']),
-        ];
-        $tem_pte['width'] = $design_data['width'];
-        $tem_pte['height'] = $design_data['height'];
-        $html = $this->smarty->fetch('new_pdf_generate.tpl', $tem_pte, TRUE);
-        $data['id_card_data'] = $id_card_data;
+            $tem_pte = ['fieldsConfig' => $fieldsConfig,
+                'students' => array_chunk($students, $chuck_data),
+                'fieldMapping' => $fieldMapping,
+                'backgroundImage' => base_url('/public/design_backgrounds/'.$design_data['background_image']),
+            ];
+            $tem_pte['width'] = $design_data['width'];
+            $tem_pte['height'] = $design_data['height'];
+            $html = $this->smarty->fetch('new_pdf_generate.tpl', $tem_pte, TRUE);
+            $data['id_card_data'] = $id_card_data;
 
-        $file_name = "id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";
-        $file_path = FCPATH . 'public/card_designs/design_' . uniqid() . '.html';
-        if (!is_dir(dirname($file_path))) {
-            mkdir(dirname($file_path), 0755, true);
+            $file_name = "id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";
+            $file_path = FCPATH . 'public/card_designs/design_' . uniqid() . '.html';
+            if (!is_dir(dirname($file_path))) {
+                mkdir(dirname($file_path), 0755, true);
+            }
+            write_file($file_path, $html);
+            if($form_data_collection_id > 0){
+                $file_name ="id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";;
+            }
+            
+            // $html = $this->smarty->fetch('pdf_generate.tpl', $data, TRUE);
+            // $this->generatePdf($html,"D",$file_name,"Normal");
+            
+            $this->generatePdfWithDom($html);
+        }else{
+            $students = [];
+            $chuck_data = $design_data['col_per_row'];
+            $from_field_name = [];
+            foreach ($from_field as $key => $value) {
+                $value = json_decode($value,TRUE);
+                $from_field_name[$value['form_name']] = $value['form_title'];
+            }
+            
+            foreach ($id_card_data as $row) {
+                foreach ($row as $student) {
+                    $other_data = [];
+                    foreach ($student['other_data'] as $formVal) {
+                        $formVal['key'] = $from_field_name[$formVal['key']];
+                        // pr($formVal);
+                        $other_data[] = $formVal;
+                    }
+                    $student['other_data'] = $other_data;
+                    $students[] = $student;
+                }
+            }
+            if($form_data_collection_id > 0){
+                $file_name ="id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";;
+            }
+           
+            $this->generateStudentIdCard($students,$form_data,$file_name);
+            
         }
-        write_file($file_path, $html);
-        if($form_data_collection_id > 0){
-            $file_name ="id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";;
-        }
-        
-        // $html = $this->smarty->fetch('pdf_generate.tpl', $data, TRUE);
-        // $this->generatePdf($html,"D",$file_name,"Normal");
-        
-        $this->generatePdfWithDom($html);
     }
     public function preview_id_card(){
         $school_id = $this->uri->segment(2);
@@ -2076,7 +2300,7 @@ class Form extends MY_Controller {
         // Output the generated PDF
         $filename = 'document_' . date('Ymd_His') . '.pdf';
         $filepath =  FCPATH . 'public/card_designs/design_' . $saved_id .'.pdf';
-    
+        
     // 7. Save the PDF to file
         file_put_contents($filepath, $dompdf->output());
         // echo json_encode($ret_arr);
@@ -2084,6 +2308,7 @@ class Form extends MY_Controller {
     }
 
     public function generatePdfWithDom($html = ''){
+        
         $dompdf = new Dompdf();
         
         $dompdf->set_option('isRemoteEnabled', true);
@@ -2100,10 +2325,12 @@ class Form extends MY_Controller {
         $saved_id = uniqid();
         // Output the generated PDF
         $filename = 'design_' . $saved_id .'.pdf';
+        createFolder("public/card_designs");
         $filepath =  FCPATH . 'public/card_designs/'.$filename;
     
     // 7. Save the PDF to file
         file_put_contents($filepath, $dompdf->output());
+        
         $this->download_pdf($filepath);
     }
     
@@ -2269,7 +2496,7 @@ class Form extends MY_Controller {
 
 
     public function upload_background() {
-       
+        createFolder("public/design_backgrounds");
         $config['upload_path'] = FCPATH.'public/design_backgrounds/';
         $config['allowed_types'] = 'gif|jpg|jpeg|png';
         $config['max_size'] = 2048; // 2MB
@@ -2321,6 +2548,1179 @@ class Form extends MY_Controller {
 
         return rmdir($folderPath);
     }
+    public function generateFormChanelPartTemplate($details = []){
+		/**
+		 * Dynamic Banner Generator (PHP GD)
+		 */
+
+		$template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/template.png";
+		$fontBold =dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
+
+		if (!file_exists($template)) {
+			http_response_code(500);
+			die("Template image not found: " . $template);
+		}
+
+		if (!file_exists($fontBold)) {
+			http_response_code(500);
+			die("Font not found: " . $fontBold . "\n\nPut a TTF font in /fonts and rename it to Roboto-Bold.ttf");
+		}
+        // pr($details,1);
+
+		// Dynamic values (GET supported)
+		$school_name     = $details['school_name'];
+		$mobile          = "M-".$details['mobile'];
+		$website         = "www.bharatidcard.com";
+		$channelPartner  = strtoupper(trim($details['channelPartner']));
+		$section         = "STUDENT ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);
+        
+		// Optional: Make school name uppercase (like your sample)
+		$school_name = strtoupper(trim($school_name));
+		$mobile      = trim($mobile);
+		$website     = trim($website);
+
+		// Load template
+		$image = imagecreatefrompng($template);
+
+		// Enable alpha for PNG
+		imagesavealpha($image, true);
+
+		// Colors
+		$blue      = imagecolorallocate($image, 25, 40, 130);
+		$black     = imagecolorallocate($image, 0, 0, 0);
+		$blackLight = imagecolorallocate($image, 52, 60, 75);
+		$blackMoreLight = imagecolorallocate($image, 85, 95, 115);
+		$white     = imagecolorallocate($image, 251, 252, 244);
+		$lightblue = imagecolorallocate($image, 43, 53, 100);
+
+
+		// ----------------------------
+		// 1) SCHOOL NAME (height stretch)
+		// ----------------------------
+		$fontSize = 48;
+
+		// Position
+		$x = 240;
+		$y = 280;
+
+		// Height stretch factor
+		$stretchY = 1.7; // 1.0 = normal, 1.3+ = taller
+
+		// Create temp text image
+		$bbox = imagettfbbox($fontSize, 0, $fontBold, $school_name);
+		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
+		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+		$tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+		// Transparent background
+		imagealphablending($tmp, false);
+		imagesavealpha($tmp, true);
+		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+		imagefill($tmp, 0, 0, $transparent);
+
+		// Draw normal text on temp
+		imagealphablending($tmp, true);
+		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blue, $fontBold, $school_name);
+
+		// Create stretched image
+		$newH = (int)($tmpH * $stretchY);
+
+		$stretched = imagecreatetruecolor($tmpW, $newH);
+		imagealphablending($stretched, false);
+		imagesavealpha($stretched, true);
+		imagefill($stretched, 0, 0, $transparent);
+
+		// Stretch ONLY height
+		imagecopyresampled(
+			$stretched,
+			$tmp,
+			0, 0, 0, 0,
+			$tmpW, $newH,
+			$tmpW, $tmpH
+		);
+
+		// Paste on main image
+		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+		// Destroy temp images
+		imagedestroy($tmp);
+		imagedestroy($stretched);
+		
+
+
+		// ----------------------------
+		// 2) MOBILE (top-right)
+		// ----------------------------
+
+		$fontSize = 21;
+
+		// Position
+		$x = 1070;
+		$y = 82;
+
+		// Height stretch factor
+		$stretchY = 1.2; // 1.0 = normal, 1.3+ = taller
+
+		// Create temp text image
+		$bbox = imagettfbbox($fontSize, 0, $fontBold, $mobile);
+		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
+		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+		$tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+		// Transparent background
+		imagealphablending($tmp, false);
+		imagesavealpha($tmp, true);
+		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+		imagefill($tmp, 0, 0, $transparent);
+
+		// Draw normal text on temp
+		imagealphablending($tmp, true);
+		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blackMoreLight, $fontBold, $mobile);
+
+		// Create stretched image
+		$newH = (int)($tmpH * $stretchY);
+
+		$stretched = imagecreatetruecolor($tmpW, $newH);
+		imagealphablending($stretched, false);
+		imagesavealpha($stretched, true);
+		imagefill($stretched, 0, 0, $transparent);
+
+		// Stretch ONLY height
+		imagecopyresampled(
+			$stretched,
+			$tmp,
+			0, 0, 0, 0,
+			$tmpW, $newH,
+			$tmpW, $tmpH
+		);
+
+		// Paste on main image
+		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+		// Destroy temp images
+		imagedestroy($tmp);
+		imagedestroy($stretched);
+
+		
+
+
+		// ----------------------------
+		// 3) CHANNEL PARTNER
+		// ----------------------------
+		$fontSize2 = 45;
+		$x2 = 25;
+		$y2 = 100;
+		imagettftext($image, $fontSize2, 0, $x2, $y2, $lightblue, $fontBold, $channelPartner);
+		
+
+
+		// ----------------------------
+		// 4) WEBSITE (below mobile)
+		// ----------------------------
+		
+		$fontSize = 25.7;
+
+		// Position
+		$x = 1070;
+		$y = 130;
+
+		// Height stretch factor
+		$stretchY = 1.1; // 1.0 = normal, 1.3+ = taller
+
+		// Create temp text image
+		$bbox = imagettfbbox($fontSize, 0, $fontBold, $website);
+		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
+		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+		$tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+		// Transparent background
+		imagealphablending($tmp, false);
+		imagesavealpha($tmp, true);
+		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+		imagefill($tmp, 0, 0, $transparent);
+
+		// Draw normal text on temp
+		imagealphablending($tmp, true);
+		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blackLight, $fontBold, $website);
+
+		// Create stretched image
+		$newH = (int)($tmpH * $stretchY);
+
+		$stretched = imagecreatetruecolor($tmpW, $newH);
+		imagealphablending($stretched, false);
+		imagesavealpha($stretched, true);
+		imagefill($stretched, 0, 0, $transparent);
+
+		// Stretch ONLY height
+		imagecopyresampled(
+			$stretched,
+			$tmp,
+			0, 0, 0, 0,
+			$tmpW, $newH,
+			$tmpW, $tmpH
+		);
+
+		// Paste on main image
+		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+		// Destroy temp images
+		imagedestroy($tmp);
+		imagedestroy($stretched);
+
+		
+
+
+		// ----------------------------
+		// 5) SESSION
+		// ----------------------------
+		$fontSize2 = 32;
+		$x3 = 17;
+		$y3 = 375;
+		imagettftext($image, $fontSize2, 0, $x3, $y3, $white, $fontBold, $section);
+
+
+		
+		// ----------------------------
+		// SCHOOL LOGO (top center)
+		// ----------------------------
+		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_logo.png";
+		if (file_exists($logoPath)) {
+
+			$logo = imagecreatefrompng($logoPath);
+
+			$logoW = 100;
+			$logoH = 110;
+
+			$logoResized = imagecreatetruecolor($logoW, $logoH);
+			imagealphablending($logoResized, false);
+			imagesavealpha($logoResized, true);
+
+			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+			imagefill($logoResized, 0, 0, $transparent);
+
+			imagecopyresampled(
+				$logoResized,
+				$logo,
+				0, 0, 0, 0,
+				$logoW, $logoH,
+				imagesx($logo),
+				imagesy($logo)
+			);
+
+			$dstX = 930;
+			$dstY = 21;
+
+			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+			imagedestroy($logo);
+			imagedestroy($logoResized);
+		}
+
+
+		// ----------------------------
+		// LEFT LOGO
+		// ----------------------------
+		$achoolPath = dirname(dirname(dirname(dirname(__DIR__))))."/public/form_template_Img/logo.png";
+		if (file_exists($achoolPath)) {
+
+			$logo = imagecreatefrompng($achoolPath);
+
+			$logoW = 160;
+			$logoH = 160;
+
+			$logoResized = imagecreatetruecolor($logoW, $logoH);
+			imagealphablending($logoResized, false);
+			imagesavealpha($logoResized, true);
+
+			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+			imagefill($logoResized, 0, 0, $transparent);
+
+			imagecopyresampled(
+				$logoResized,
+				$logo,
+				0, 0, 0, 0,
+				$logoW, $logoH,
+				imagesx($logo),
+				imagesy($logo)
+			);
+
+			$dstX = 10;
+			$dstY = 150;
+
+			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+			imagedestroy($logo);
+			imagedestroy($logoResized);
+		}
+
+
+
+		// ----------------------------
+		// SAVE IMAGE
+		// ----------------------------
+		$saveDir = FCPATH . "public/uploads/form_template_img";
+        $absolutePath = "public/uploads/form_template_img";
+		if (!is_dir($saveDir)) {
+			mkdir($saveDir, 0777, true);
+		}
+
+		$savePath = $saveDir . "/banner_" . time() . ".png";
+        $absolutePath = $absolutePath . "/banner_" . time() . ".png";
+		// $savePath = $saveDir . "/banner_" . "135" . ".png";
+		imagepng($image, $savePath);
+
+
+        return $absolutePath;
+          
+
+		
+	}
+
+	public function generateFormSchoolTemplate($details = []){
+		
+		/**
+		 * Dynamic Banner Generator (PHP GD)
+		 */
+
+		$template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_template.png";
+		$fontBold = dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
+		// pr($fontBold,1);
+
+		if (!file_exists($template)) {
+			http_response_code(500);
+			die("Template image not found: " . $template);
+		}
+
+		if (!file_exists($fontBold)) {
+			http_response_code(500);
+			die("Font not found: " . $fontBold . "\n\nPut a TTF font in /fonts and rename it to Roboto-Bold.ttf");
+		}
+
+		// Dynamic values (GET supported)
+		$school_name     = $details['school_name'];
+		$mobile          = "M-".$details['school_name'];
+		$website         = "www.bharatidcard.com";
+		$section         = "STUDENT ID CARD DATA COLLECTION FORM SESSION-2025-26";
+
+		// Optional: Make school name uppercase (like your sample)
+		$school_name = strtoupper(trim($school_name));
+		$mobile      = trim($mobile);
+		$website     = trim($website);
+
+		// Load template
+		$image = imagecreatefrompng($template);
+
+		// Enable alpha for PNG
+		imagesavealpha($image, true);
+
+		// Colors
+		$blue      = imagecolorallocate($image, 25, 40, 130);
+		$black     = imagecolorallocate($image, 0, 0, 0);
+		$white     = imagecolorallocate($image, 251, 252, 244);
+		$lightblue = imagecolorallocate($image, 43, 53, 100);
+
+
+		// ----------------------------
+		// 1) SCHOOL NAME (height stretch)
+		// ----------------------------
+		$fontSize = 48;
+
+		// Position
+		$x = 240;
+		$y = 280;
+
+		// Height stretch factor
+		$stretchY = 1.7; // 1.0 = normal, 1.3+ = taller
+
+		// Create temp text image
+		$bbox = imagettfbbox($fontSize, 0, $fontBold, $school_name);
+		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
+		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+		$tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+		// Transparent background
+		imagealphablending($tmp, false);
+		imagesavealpha($tmp, true);
+		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+		imagefill($tmp, 0, 0, $transparent);
+
+		// Draw normal text on temp
+		imagealphablending($tmp, true);
+		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blue, $fontBold, $school_name);
+
+		// Create stretched image
+		$newH = (int)($tmpH * $stretchY);
+
+		$stretched = imagecreatetruecolor($tmpW, $newH);
+		imagealphablending($stretched, false);
+		imagesavealpha($stretched, true);
+		imagefill($stretched, 0, 0, $transparent);
+
+		// Stretch ONLY height
+		imagecopyresampled(
+			$stretched,
+			$tmp,
+			0, 0, 0, 0,
+			$tmpW, $newH,
+			$tmpW, $tmpH
+		);
+
+		// Paste on main image
+		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+		// Destroy temp images
+		imagedestroy($tmp);
+		imagedestroy($stretched);
+
+
+		// ----------------------------
+		// 5) SESSION
+		// ----------------------------
+		$fontSize2 = 32;
+		$x3 = 17;
+		$y3 = 375;
+		imagettftext($image, $fontSize2, 0, $x3, $y3, $white, $fontBold, $section);
+
+
+		// ----------------------------
+		// SCHOOL LOGO (top center)
+		// ----------------------------
+		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_logo.png";
+		if (file_exists($logoPath)) {
+
+			$logo = imagecreatefrompng($logoPath);
+
+			$logoW = 100;
+			$logoH = 110;
+
+			$logoResized = imagecreatetruecolor($logoW, $logoH);
+			imagealphablending($logoResized, false);
+			imagesavealpha($logoResized, true);
+
+			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+			imagefill($logoResized, 0, 0, $transparent);
+
+			imagecopyresampled(
+				$logoResized,
+				$logo,
+				0, 0, 0, 0,
+				$logoW, $logoH,
+				imagesx($logo),
+				imagesy($logo)
+			);
+
+			$dstX = 930;
+			$dstY = 21;
+
+			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+			imagedestroy($logo);
+			imagedestroy($logoResized);
+		}
+
+		// ----------------------------
+		// LEFT LOGO
+		// ----------------------------
+		$achoolPath = FCPATH.$details['school_image'];
+		if (file_exists($achoolPath)) {
+
+			$logo = imagecreatefrompng($achoolPath);
+
+			$logoW = 160;
+			$logoH = 160;
+
+			$logoResized = imagecreatetruecolor($logoW, $logoH);
+			imagealphablending($logoResized, false);
+			imagesavealpha($logoResized, true);
+
+			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+			imagefill($logoResized, 0, 0, $transparent);
+
+			imagecopyresampled(
+				$logoResized,
+				$logo,
+				0, 0, 0, 0,
+				$logoW, $logoH,
+				imagesx($logo),
+				imagesy($logo)
+			);
+
+			$dstX = 10;
+			$dstY = 150;
+
+			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+			imagedestroy($logo);
+			imagedestroy($logoResized);
+		}
+
+
+		$saveDir = FCPATH . "public/uploads/form_template_img";
+        $absolutePath = "public/uploads/form_template_img";
+		if (!is_dir($saveDir)) {
+			mkdir($saveDir, 0777, true);
+		}
+
+		$savePath = $saveDir . "/banner_" . time() . ".png";
+        $absolutePath = $absolutePath . "/banner_" . time() . ".png";
+		// $savePath = $saveDir . "/banner_" . "135" . ".png";
+		imagepng($image, $savePath);
+
+
+        return $absolutePath;
+        // OUTPUT IMAGE
+		// header("Content-Type: image/png");
+		// imagepng($image);
+		// imagedestroy($image);
+		// exit;
+	}
+    public function generateStudentIdCard1()
+    {
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+        $template = FCPATH . "public/id_card.png"; // blank template (no text)
+        $fontBold = FCPATH . "fonts/Roboto-Bold.ttf";
+        $fontReg  = FCPATH . "fonts/Roboto-Regular.ttf";
+
+        if (!file_exists($template)) die("Template missing: " . $template);
+        if (!file_exists($fontBold)) die("Font missing: " . $fontBold);
+        if (!file_exists($fontReg)) die("Font missing: " . $fontReg);
+
+        // -------------------------
+        // Dynamic values
+        // -------------------------
+        $schoolName = "INGOUDE ACADEMY";
+        $schoolAddr = "123 Anywhere St, Any City, ST 12345";
+        $photoPath  = FCPATH . "public/student.png"; // student photo (png)
+
+        $fields = [
+            "Name"        => "GAYATRI HEDAUA",
+            "Father Name" => "Mr. NARAYAN",
+            "Mother Name" => "Miss. LATA HEDAUA",
+            "Phone"       => "9876543210",
+            "Blood Group" => "O+",
+            "Address"     => "123 Anywhere St, Any City, ST 12345asdks",
+            "Phone1"       => "9876543210",
+            "Blood Group1" => "O+",
+            "Address1"     => "123 Anywhere St, Any City, ST 12345asdks",
+        ];
+        $srialNumber = "Sr. No. : 1";
+
+        // -------------------------
+        // Load template
+        // -------------------------
+        $img = imagecreatefrompng($template);
+        imagesavealpha($img, true);
+
+        // Colors
+        $darkBlue = imagecolorallocate($img, 25, 40, 130);
+        $labelClr = imagecolorallocate($img, 55, 60, 80);
+        $valueClr = imagecolorallocate($img, 0, 0, 0);
+
+        // -------------------------
+        // School Name
+        // -------------------------
+        $schoolX = 170;
+        $schoolY = 113;
+
+        imagettftext($img, 33, 0, $schoolX, $schoolY, $darkBlue, $fontBold, $schoolName);
+
+        // -------------------------
+        // School Address (auto wrap)
+        // -------------------------
+        $addrX = 170;
+        $addrY = 155;
+
+        // max width for school address
+        $addrLines = $this->wrapTextByWidth($schoolAddr, $fontReg, 20, 600);
+
+        foreach ($addrLines as $k => $line) {
+            imagettftext($img, 20, 0, $addrX, $addrY + ($k * 16), $labelClr, $fontReg, $line);
+        }
+
+        // -------------------------
+        // Serial Number
+        // -------------------------
+        $schoolX = 170;
+        $schoolY = 227;
+
+        imagettftext($img, 20, 0, $schoolX, $schoolY, $darkBlue, $fontBold, $srialNumber);
+
+        // -------------------------
+        // Student Photo (resize + place)
+        // -------------------------
+        $photoX = 91;
+        $photoY = 241;
+        $photoW = 335;
+        $photoH = 320;
+
+        if (file_exists($photoPath)) {
+
+            $photo = imagecreatefrompng($photoPath);
+
+            $resized = imagecreatetruecolor($photoW, $photoH);
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+
+            $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+            imagefill($resized, 0, 0, $transparent);
+
+            imagecopyresampled(
+                $resized,
+                $photo,
+                0, 0, 0, 0,
+                $photoW, $photoH,
+                imagesx($photo),
+                imagesy($photo)
+            );
+
+            imagecopy($img, $resized, $photoX, $photoY, 0, 0, $photoW, $photoH);
+
+            imagedestroy($photo);
+            imagedestroy($resized);
+        }
+
+        // -------------------------
+        // Fields (2-column layout) - PERFECT ALIGN
+        // -------------------------
+        $labelX = 450;
+        $valueX = 620;
+
+        $startY = 228; // first row Y
+        $rowGap = 34;
+
+        $labelFontSize = 17;
+        $valueFontSize = 17;
+
+        // max width for value column
+        $maxValueWidth = 320;
+
+        $i = 0;
+        
+        foreach ($fields as $label => $value) {
+
+            $y = $startY + ($i * $rowGap);
+
+            // label
+            imagettftext($img, $labelFontSize, 0, $labelX, $y, $labelClr, $fontBold, $label);
+
+            // wrap value by width
+            $valueLines = $this->wrapTextByWidth($value, $fontBold, $valueFontSize, $maxValueWidth);
+
+            foreach ($valueLines as $k => $line) {
+                imagettftext(
+                    $img,
+                    $valueFontSize,
+                    0,
+                    $valueX,
+                    $y + ($k * 18),
+                    $valueClr,
+                    $fontBold,
+                    $line
+                );
+            }
+
+            // move next row based on how many lines value took
+            $i += max(1, count($valueLines));
+        }
+
+        // -------------------------
+        // Save + Output
+        // -------------------------
+        $saveDir = FCPATH . "public/id_cards/";
+        if (!is_dir($saveDir)) mkdir($saveDir, 0777, true);
+
+        $fileName = "student_card_1.png";
+        imagepng($img, $saveDir . $fileName);
+
+        header("Content-Type: image/png");
+        imagepng($img);
+        imagedestroy($img);
+        exit;
+    }
+    public function generateStudentIdCard($idCardData = array(),$school_data = array(),$file_name = [])
+    {
+        // ini_set('display_errors', 1);
+        // ini_set('display_startup_errors', 1);
+        // error_reporting(E_ALL);
+
+        $fields = $idCardData;
+        // Multi student data
+        // $fields = [[
+        //     "Name"        => "GAYATRI HEDAUA",
+        //     "Father Name" => "Mr. NARAYAN",
+        //     "Mother Name" => "Miss. LATA HEDAUA",
+        //     "Phone"       => "9876543210",
+        //     "Blood Group" => "O+",
+        //     "Address"     => "123 Anywhere St, Any City, ST 12345asdks",
+        //     "Phone1"      => "9876543210",
+        //     "Blood Group1"=> "O+",
+        //     "Address1"    => "123 Anywhere St, Any City, ST 12345asdks",
+        //     "Blood Group2"=> "O+",
+        //     "Address2"    => "123 Anywhere St, Any City, ST 12345asdks",
+        //     "Blood Group3"=> "O+",
+        // ],[
+        //     "Name"        => "SECOND STUDENT",
+        //     "Father Name" => "Mr. AAA",
+        //     "Mother Name" => "Miss. LATA HEDAUA",
+        //     "Phone"       => "9876543210",
+        //     "Blood Group" => "O+",
+        //     "Address"     => "123 Anywhere St, Any City, ST 12345asdks",
+        //     "Phone1"      => "9876543210",
+        //     "Blood Group1"=> "O+",
+        //     "Address1"    => "123 Anywhere St, Any City, ST 12345asdks",
+        //     "Blood Group2"=> "O+",
+        //     "Address2"    => "123 Anywhere St, Any City, ST 12345asdks",
+        //     "Blood Group3"=> "O+",
+        //     "Blood Group4"=> "O+"
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ],[
+        //     "Name"        => "THIRD STUDENT",
+        //     "Father Name" => "Mr. CCC",
+        //     "Mother Name" => "Mrs. DDD",
+        //     "Phone"       => "7777777777",
+        //     "Blood Group" => "AB+",
+        //     "Address"     => "Third Address...",
+        //     "Phone1"      => "6666666666",
+        //     "Blood Group1"=> "O-",
+        //     "Address1"    => "Third Address 2...",
+        // ]];
+
+        // 1) Generate all cards
+        $school_detail = [
+            "school_name" => $school_data['name'],
+            "school_address" => $school_data['address']    
+        ];
+        $generatedCards = [];
+        foreach ($fields as $i => $student) {
+            
+            $extraFeilds = array_column($student['other_data'],"value","key");
+            $image = $student['image'];
+            $sr_no = $student['sr_no'];
+            
+            $generatedCards[] = $this->generateSingleStudentCard($extraFeilds, $sr_no,$image,$school_detail);
+        }
+
+        
+
+        $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('ID Card System');
+        $pdf->SetAuthor('ID Card System');
+        $pdf->SetTitle('Student ID Cards');
+
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 0);
+        $pdf->AddPage();
+
+        // ----------------------------
+        // Layout settings
+        // ----------------------------
+        $pageW = $pdf->getPageWidth();
+        $pageH = $pdf->getPageHeight();
+        $pdf->SetPrintHeader(false);
+        $pdf->SetPrintFooter(false);
+
+        $marginL = 5;
+        $marginR = 5;
+        $marginT = 5;
+
+        // 2 cards in one row
+        $gapX = 5;   // gap between 2 cards
+        $gapY = 5;   // gap between rows
+
+        $usableW = $pageW - $marginL - $marginR;
+        list($imgW, $imgH) = getimagesize($generatedCards[0]);
+        $cardW = ($usableW - $gapX) / 2;
+        $cardH = ($cardW * $imgH) / $imgW;   // PERFECT HEIGHT
+
+        $x1 = $marginL;
+        $x2 = $marginL + $cardW + $gapX;
+
+        $y = $marginT;
+
+        // ----------------------------
+        // Place images
+        // ----------------------------
+        foreach ($generatedCards as $k => $imgPath) {
+
+            // Decide column (0 = left, 1 = right)
+            $col = $k % 2;
+
+            $x = ($col == 0) ? $x1 : $x2;
+
+            // If new row (every 2 cards)
+            if ($col == 0 && $k > 0) {
+                $y += $cardH + $gapY;
+            }
+
+            // If page end reached -> new page
+            if (($y + $cardH) > ($pageH - 10)) {
+                $pdf->AddPage();
+                $y = $marginT;
+            }
+
+            // Draw image
+            $pdf->Image(
+                $imgPath,
+                $x,
+                $y,
+                $cardW,
+                $cardH,
+                'PNG',
+                '',
+                '',
+                true,
+                300,
+                '',
+                false,
+                false,
+                0,
+                false,
+                false,
+                false
+            );
+        }
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+        // 3) Download PDF
+        $pdf->Output($file_name != "" && $file_name != null ? $file_name : "student_id_cards.pdf", "D");
+        exit;
+    }
+
+    public function rowGap($student){
+        switch (count($student)) {
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                $rowGap = 44;
+                break;
+            case 10:
+                $rowGap = 40;
+                break;
+            case 11:
+                $rowGap = 38;
+                break;
+            case 12:
+            $rowGap = 34;
+            break;
+            default:
+                $rowGap = 31;
+                break;
+        }
+        return $rowGap;
+    }
+
+
+    private function generateSingleStudentCard($student, $index = 1,$image = "",$school_detail = array())
+    {
+        $template = FCPATH . "public/id_card.png";
+        $fontBold = FCPATH . "fonts/Roboto-Bold.ttf";
+        $fontReg  = FCPATH . "fonts/Roboto-Regular.ttf";
+
+        if (!file_exists($template)) die("Template missing: " . $template);
+        if (!file_exists($fontBold)) die("Font missing: " . $fontBold);
+        if (!file_exists($fontReg)) die("Font missing: " . $fontReg);
+
+        // -------------------------
+        // Dynamic values
+        // -------------------------
+        $schoolName = $school_detail['school_name'];
+        $schoolAddr = $school_detail['school_address'];
+        // $schoolName  = "INGOUDE ACADEMY";
+        // $schoolAddr  = "123 Anywhere St, Any City, ST 12345";
+        $photoPath   = $image != "" && $image != null ? str_replace(base_url(),FCPATH,$image) : FCPATH . "public/student.png"; // you can make dynamic later
+        $srialNumber = "Sr. No. : " . $index;
+        
+        // -------------------------
+        // Load template
+        // -------------------------
+        $img = imagecreatefrompng($template);
+        imagesavealpha($img, true);
+
+        // Colors
+        $darkBlue = imagecolorallocate($img, 25, 40, 130);
+        $labelClr = imagecolorallocate($img, 55, 60, 80);
+        $valueClr = imagecolorallocate($img, 0, 0, 0);
+
+        // -------------------------
+        // School Name
+        // -------------------------
+        imagettftext($img, 33, 0, 170, 113, $darkBlue, $fontBold, $schoolName);
+
+        // -------------------------
+        // School Address (AUTO FIT - single line)
+        // -------------------------
+        $addrX = 170;
+        $addrY = 155;
+
+        $maxAddrWidth = 600;
+        $addrFontSize = 20;
+
+        while ($addrFontSize > 10) {
+
+            $bbox = imagettfbbox($addrFontSize, 0, $fontReg, $schoolAddr);
+            $textWidth = $bbox[2] - $bbox[0];
+
+            if ($textWidth <= $maxAddrWidth) {
+                break;
+            }
+
+            $addrFontSize--;
+        }
+
+        imagettftext($img, $addrFontSize, 0, $addrX, $addrY, $labelClr, $fontReg, $schoolAddr);
+
+        // -------------------------
+        // Serial Number
+        // -------------------------
+        imagettftext($img, 20, 0, 170, 227, $darkBlue, $fontBold, $srialNumber);
+
+        // -------------------------
+        // Student Photo
+        // -------------------------
+        $photoX = 91;
+        $photoY = 241;
+        $photoW = 335;
+        $photoH = 320;
+        // pr($photoPath,1);
+        if (file_exists($photoPath)) {
+
+            $ext = strtolower(pathinfo($photoPath, PATHINFO_EXTENSION));
+
+            if ($ext == "png") {
+                $photo = imagecreatefrompng($photoPath);
+            } elseif ($ext == "jpg" || $ext == "jpeg") {
+                $photo = imagecreatefromjpeg($photoPath);
+            } else {
+                die("Invalid image format. Only PNG, JPG, JPEG allowed.");
+            }
+            
+
+            $resized = imagecreatetruecolor($photoW, $photoH);
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+
+            $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+            imagefill($resized, 0, 0, $transparent);
+
+            imagecopyresampled(
+                $resized,
+                $photo,
+                0, 0, 0, 0,
+                $photoW, $photoH,
+                imagesx($photo),
+                imagesy($photo)
+            );
+
+            imagecopy($img, $resized, $photoX, $photoY, 0, 0, $photoW, $photoH);
+
+            imagedestroy($photo);
+            imagedestroy($resized);
+        }
+
+        // -------------------------
+        // Fields (2-column)  (AUTO FIT - single line)
+        // -------------------------
+        $labelX = 450;
+        $valueX = 620;
+
+        $startY = 228;
+        
+
+        $labelFontSize = 17;
+        $valueFontSize = 17;
+        $maxValueWidth = 320;
+
+        $rowGap = $this->rowGap($student);
+        $i = 0;
+        foreach ($student as $label => $value) {
+
+            $y = $startY + ($i * $rowGap);
+
+            // Label
+            imagettftext($img, $labelFontSize, 0, $labelX, $y, $labelClr, $fontBold, $label);
+
+            // Value (AUTO FIT single line)
+            $this->drawSingleLineAutoFit(
+                $img,
+                $value,
+                $fontBold,
+                $valueX,
+                $y,
+                $valueClr,
+                $valueFontSize, // start size
+                10,             // min size
+                $maxValueWidth
+            );
+
+            $i++; // always 1 row only
+        }
+
+        // -------------------------
+        // Save PNG
+        // -------------------------
+        $saveDir = FCPATH . "public/id_cards/";
+        if (!is_dir($saveDir)) mkdir($saveDir, 0777, true);
+
+        $fileName = "student_card_" . $index . ".png";
+        $fullPath = $saveDir . $fileName;
+
+        imagepng($img, $fullPath);
+        imagedestroy($img);
+
+        return $fullPath;
+    }
+
+    private function drawSingleLineAutoFit($img, $text, $font, $x, $y, $color, $startSize, $minSize, $maxWidth)
+    {
+        $fontSize = $startSize;
+
+        while ($fontSize > $minSize) {
+
+            $bbox = imagettfbbox($fontSize, 0, $font, $text);
+            $textWidth = $bbox[2] - $bbox[0];
+
+            if ($textWidth <= $maxWidth) {
+                break;
+            }
+
+            $fontSize--;
+        }
+
+        imagettftext($img, $fontSize, 0, $x, $y, $color, $font, $text);
+    }
+
+
+
+
+
+/**
+ * Pixel width based wrap (BEST for GD)
+ */
+private function wrapTextByWidth($text, $fontFile, $fontSize, $maxWidth)
+{
+    $text = trim($text);
+    if ($text === '') return [''];
+
+    $words = preg_split('/\s+/', $text);
+    $lines = [];
+    $currentLine = "";
+
+    foreach ($words as $word) {
+
+        $testLine = ($currentLine === "") ? $word : $currentLine . " " . $word;
+
+        $box = imagettfbbox($fontSize, 0, $fontFile, $testLine);
+        $lineWidth = $box[2] - $box[0];
+
+        if ($lineWidth > $maxWidth) {
+            if ($currentLine !== "") {
+                $lines[] = $currentLine;
+            }
+            $currentLine = $word;
+        } else {
+            $currentLine = $testLine;
+        }
+    }
+
+    if ($currentLine !== "") {
+        $lines[] = $currentLine;
+    }
+
+    return $lines;
+}
+
   
 
 }

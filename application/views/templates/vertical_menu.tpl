@@ -25,6 +25,16 @@
                <a href="<%$base_url%>group_master" class="dropdown-item">Group Master</a>
             </li>
             <%/if%>
+            <%if checkGroupAccess("config_setting_list","list","No") %>
+            <li>
+               <a href="<%$base_url%>config_setting_list" class="dropdown-item">Configuration Settings</a>
+            </li>
+            <%/if%>
+            <%if checkGroupAccess("field_selection_list","list","No") %>
+            <li>
+               <a href="<%$base_url%>field_selection_list" class="dropdown-item">Group Field Configuration</a>
+            </li>
+            <%/if%>
             
          </ul>
       </li>

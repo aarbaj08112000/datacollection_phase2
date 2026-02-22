@@ -96,6 +96,34 @@ class Login_model extends CI_Model {
 		$data = is_object($query) ? $query->row_array() : [];
         return $data;
 	}
+
+	public function getGroupData($group_code = ""){
+        $this->db->select('u.*');
+		$this->db->from('group_master u');
+		$this->db->where('u.group_code', $group_code);
+		$query = $this->db->get();
+		$data = is_object($query) ? $query->row_array() : [];
+        return $data;
+    }
+	public function insertUser($insert_date = array()){
+        $this->db->insert("userinfo", $insert_date);
+        $insert_id = $this->db->insert_id();
+        return  $insert_id;
+    }
+
+	public function insertRegistraionOtp($insert_date = array()){
+        $this->db->insert("registration_otp", $insert_date);
+        $insert_id = $this->db->insert_id();
+        return  $insert_id;
+    }
+	public function getRegistraionOtp($code = ""){
+        $this->db->select('u.*');
+		$this->db->from('registration_otp u');
+		$this->db->where('u.code', $code);
+		$query = $this->db->get();
+		$data = is_object($query) ? $query->row_array() : [];
+        return $data;
+    }
 	
     
 }
