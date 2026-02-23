@@ -96,7 +96,7 @@
 	);
 
 if($_SERVER['SERVER_NAME'] == 'datacollection2.codecrafterinfotech.online'){
-	$db['default']['username'] = 'data_collect_2';
+	$db['default']['username'] = 'u875583157_data_collect_2';
 	$db['default']['password'] = 'DataCollection@2026';
-	$db['default']['database'] = 'data_collect_2';
+	$db['default']['database'] = 'u875583157_data_collect_2';
 }	
