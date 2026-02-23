@@ -2,3 +2,4 @@ application/config/database.php
 application/config/config.php
 application/views/templates_c/*
 public/uploads/*
+.history
