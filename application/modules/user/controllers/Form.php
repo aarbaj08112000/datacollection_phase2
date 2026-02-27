@@ -950,7 +950,7 @@ class Form extends MY_Controller {
             $ret_arr = [];
             $msg ='Something went wrong';
             $success = 0;
-            if (count($upload_error_msg) > 0 || count($template_error_msg) > 0) {
+            if (!empty($upload_error_msg) || !empty($template_error_msg)) {
                 $msg = count($upload_error_msg) > 0
                     ? $upload_error_msg[error]
                     : $template_error_msg[error];
