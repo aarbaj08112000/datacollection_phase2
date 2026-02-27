@@ -951,11 +951,14 @@ class Form extends MY_Controller {
             $msg ='Something went wrong';
             $success = 0;
             if (!empty($upload_error_msg) || !empty($template_error_msg)) {
-                $msg = count($upload_error_msg) > 0
-                    ? $upload_error_msg[error]
-                    : $template_error_msg[error];
-                $msg .= "Only jpg,jpeg,png,bmp,heic file type allowed";
-            } else {
+                $msg = '';
+                if (!empty($upload_error_msg['error'])) {
+                    $msg = $upload_error_msg['error'];
+                } elseif (!empty($template_error_msg['error'])) {
+                    $msg = $template_error_msg['error'];
+                }
+                $msg .= " Only jpg, jpeg, png, bmp, heic file type allowed";
+            }else {
                 $data = array(
                         'name' => $this->input->post('name'),
                         'image' => $school_image,
