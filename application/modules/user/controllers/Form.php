@@ -915,7 +915,8 @@ class Form extends MY_Controller {
             }
 
             $template_image = "";
-            if(!(count($upload_error_msg) > 0 || count($template_error_msg) > 0)){
+        if (!( (!empty($upload_error_msg) && count($upload_error_msg) > 0) || 
+            (!empty($template_error_msg) && count($template_error_msg) > 0))) {
                 $template_details['school_image'] = $school_image;
                 if($user_role == "ChannelPartner" ){
                     $template_image = $this->generateFormChanelPartTemplate($template_details); 
