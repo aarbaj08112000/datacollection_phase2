@@ -950,12 +950,15 @@ class Form extends MY_Controller {
             $ret_arr = [];
             $msg ='Something went wrong';
             $success = 0;
-            if (count($upload_error_msg) > 0 || count($template_error_msg) > 0) {
-                $msg = count($upload_error_msg) > 0
-                    ? $upload_error_msg[error]
-                    : $template_error_msg[error];
-                $msg .= "Only jpg,jpeg,png,bmp,heic file type allowed";
-            } else {
+            if (!empty($upload_error_msg) || !empty($template_error_msg)) {
+                $msg = '';
+                if (!empty($upload_error_msg['error'])) {
+                    $msg = $upload_error_msg['error'];
+                } elseif (!empty($template_error_msg['error'])) {
+                    $msg = $template_error_msg['error'];
+                }
+                $msg .= " Only jpg, jpeg, png, bmp, heic file type allowed";
+            }else {
                 $data = array(
                         'name' => $this->input->post('name'),
                         'image' => $school_image,
