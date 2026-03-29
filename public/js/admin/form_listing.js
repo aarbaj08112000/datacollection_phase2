@@ -192,6 +192,14 @@ const page = {
         statusChange.show()
         
       });
+      $(document).on('click','#addNewForm',function() {
+        if(role == "ChannelPartner" || role == "School"){
+          $("#checkTypeOfForm").modal("show")
+        }else{
+          window.location.href = base_url+"form_creation";
+        }
+
+      });
     
     
 
@@ -425,6 +433,13 @@ const page = {
 	            console.error("Error:", error);
 	          },
 	        });
+	      });
+
+        $("#checkTypeOfFormData").submit(function(e){
+	        e.preventDefault();
+	        var type = $("[name='form_heder_type']:checked").val();
+          type = btoa(type);
+          window.location.href = base_url+"form_creation?type="+type;
 	      });
 
     },

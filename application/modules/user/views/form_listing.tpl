@@ -22,8 +22,8 @@
 
       <div class="dt-top-btn d-grid gap-2 d-md-flex justify-content-md-end mb-5">
       <%if checkGroupAccess("form_listing","add","No") %>
-         <a href="<%base_url('form_creation')%>"  class="btn btn-seconday" title="Create New Form">
-       <i class="ti ti-plus"></i>
+         <a href="javascript:void(0)"  class="btn btn-seconday" title="Generate Form Link" id="addNewForm">
+       Generate Form Link
         </a>
       <%/if%>
         
@@ -88,6 +88,7 @@
                      </div>
                      </div>
                </div>
+               
         <div class="modal fade" id="importData" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                      <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content">
@@ -112,7 +113,40 @@
                            </div>
                         </div>
                      </div>
-                  </div>
+                     </div>
+                     <div class="modal fade" id="checkTypeOfForm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                     <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                              <h5 class="modal-title w-100" id="exampleModalLabel">Form Link Type</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                              
+                              </button>
+                           </div>
+                           <form action="javascript:void(0)" method="POST" enctype="multipart/form-data" id="checkTypeOfFormData" class=""> 
+                           <div class="modal-body">
+                             <div class="radio-box">
+                                <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
+                                <br>
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="form_heder_type" value="school" checked>
+                                  <label class="form-check-label" for="inlineRadio2">School</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="form_heder_type" value="office">
+                                  <label class="form-check-label" for="inlineRadio1">Staff</label>
+                                </div>
+                              </div>
+                           </div>
+                           <div class="modal-footer">
+                           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                           <button type="submit" class="btn btn-primary">Save</button>
+                           </form>
+                           </div>
+                        </div>
+                     </div>
+                     
+                  
                </div>
       <div class="content-backdrop fade"></div>
     </div>
@@ -254,6 +288,7 @@
     var order_acceptance_enable = <%$order_acceptance_enable|json_encode%>;
     var left_fix_column = <%$left_fix_column|json_encode%>;
     var is_deleted = <%$is_deleted|json_encode%>;
+    var role = <%$user_role|json_encode%>;
 </script>
 
     

@@ -4,6 +4,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <!-- Include Tokenfield JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-tokenfield/dist/bootstrap-tokenfield.min.js"></script>
+    
     <style>
         .tokenfield {
             width: 100%;
@@ -82,6 +83,14 @@
           cursor: default;
           padding-right: 4px;
       }
+      .custom-tooltip .tooltip-inner {
+    max-width: 400px;
+    white-space: normal;
+}
+.tooltip-inner {
+    max-width: 500px;
+    white-space: normal;
+}
     </style>
 <div class="content-wrapper">
   <!-- Content -->
@@ -109,6 +118,7 @@
        
 
       </div>
+      
       <div class="dt-top-btn d-grid gap-2 d-md-flex justify-content-md-end mb-5">
         <%* <button class="btn btn-seconday" type="button" id="downloadCSVBtn" title="Download CSV"><i class="ti ti-file-type-csv"></i></button>
         <button class="btn btn-seconday" type="button" id="downloadPDFBtn" title="Download PDF"><i class="ti ti-file-type-pdf"></i></button>
@@ -129,6 +139,7 @@
 
         <form class="container mt-4" id="create_form">
         <div class="row">
+        
           <div class="col-md-4 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="name" class="form-label fs-6">School/Collage/Office Name<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="school_name" placeholder="Enter your name" name="name" value="<%$school_data['school_name']%>">
@@ -141,12 +152,12 @@
             <label for="url" class="form-label fs-6">URL<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="url" placeholder="Enter your website" name="url" value="<%$url%>">
           </div>
-          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
+          <div class="col-md-4 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%>">
             <div class="radio-box">
             <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
             <br>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="form_heder_type"  value="school"  <%if $user_role eq 'School'%>checked<%/if%>>
+            <div class="form-check form-check-inline ">
+              <input class="form-check-input" type="radio" name="form_heder_type"  value="school"  <%if $form_type eq 'school'%>checked<%/if%>>
               <label class="form-check-label" for="inlineRadio2">School</label>
             </div>
             <div class="form-check form-check-inline">
@@ -154,12 +165,12 @@
               <label class="form-check-label" for="inlineRadio1">Collage</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="form_heder_type"  value="office" >
-              <label class="form-check-label" for="inlineRadio1">Office</label>
+              <input class="form-check-input" type="radio" name="form_heder_type"  value="office" <%if $form_type eq 'office'%>checked<%/if%>>
+              <label class="form-check-label" for="inlineRadio1">Staff</label>
             </div>
             </div>
           </div>
-          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%> ">
+          <div class="col-md-4 <%if $user_role neq 'ChannelPartner' && $user_role neq 'School'%>mt-3<%/if%>  <%if $user_role eq 'School'%>hide<%/if%> ">
             <label for="url" class="form-label fs-6">Contact Person<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control"  placeholder="Enter contact person" name="contact_person" value="<%$contact_person%>">
           </div>
@@ -203,13 +214,13 @@
         </div>
           <div class="col-md-4 mt-3 course-row-box">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-6">Course<span class="text-danger ms-1">*</span></label>
+            <label for="url" class="form-label fs-6">Course<span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Course predefined values are available in the dropdown. You can select multiple options if required. If you need a new course value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select course" name="course" />
             </div>
           </div>
           <div class="col-md-4 mt-3 section-box">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1">*</span></label>
+            <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Section predefined values are available in the dropdown. You can select multiple options if required. If you need a new section value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="sectionToken" type="text" class="form-control autocomplete" placeholder="Select section" name="section" />
             </div>
           </div>
@@ -236,7 +247,7 @@
       
         <div class="row mt-3">
         <div class="col-md-12">
-          <label class="form-label fs-6">Select the form fields:<span class="text-danger ms-1">*</span></label>
+          <label class="form-label fs-6 my-3">Select the form fields:<span class="text-danger ms-1">*</span></label><span class="float-end  my-3"><b style="    color: red;">Note</b> : If you want to change the sequence of fields, you can drag and drop the fields.</span>
           <div class="d-flex flex-wrap gap-3 " id="sortable">
             <%foreach from=$field_data key=key item='feild'%>
             <div class="form-check border ui-state-default position-relative" style="width: 24%;    cursor: move;">

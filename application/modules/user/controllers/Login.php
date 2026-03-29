@@ -53,7 +53,7 @@ class Login extends MY_Controller {
 		// sent_msg($msg,"8485835691");
 		// pr("ok",1);
 		$post_data = $this->input->post();
-		$result = $this->Login_model->get_user_exist($post_data['email']);
+		$result = $this->Login_model->get_user_exist($post_data['email'],$post_data['contact_person_mobile']);
 		$success = 0;
 		$messages = "Something Went Wrong!";
 		if(count($result) > 0){

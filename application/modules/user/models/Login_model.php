@@ -18,11 +18,14 @@ class Login_model extends CI_Model {
 		$data = is_object($query) ? $query->row_array() : [];
         return $data;
 	}
-	public function get_user_exist($email ="")
+	public function get_user_exist($email ="",$mobile_number = "")
 	{
 		$this->db->select('*');
 		$this->db->from('userinfo u');
 		$this->db->where('u.user_email', $email);
+		if($mobile_number != ""){
+			$this->db->where('u.user_mobile_number', $email);
+		}
 		$query = $this->db->get();
 		$data = is_object($query) ? $query->row_array() : [];
         return $data;

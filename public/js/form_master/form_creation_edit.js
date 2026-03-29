@@ -60,7 +60,7 @@ const page = {
                         maxlength: 300,
                     },
                     comment: {
-                        required: true,
+                        // required: true,
                         minlength: 10,            
                         maxlength: 1000,
                     }

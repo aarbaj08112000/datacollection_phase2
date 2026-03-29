@@ -16,6 +16,9 @@ class Form extends MY_Controller {
     {
         $data = [];
         // pr($data,1);
+        $get_data = $this->input->get();
+        $form_type = isset($get_data['type']) && $get_data['type'] != "" ? base64_decode($get_data['type']) : "";
+        $data['form_type'] = in_array($form_type,["school","office"]) ? $form_type : "school";
         $data['user_role'] = $user_role = $this->session->userdata("role");
         $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
         $allowFileds = isset($allowFieldData['selected_fields']) && count($allowFieldData['selected_fields']) ? json_decode($allowFieldData['selected_fields']) : [];
@@ -256,6 +259,7 @@ class Form extends MY_Controller {
         $data["admin_url"] = base_url();
         $data["base_url"] = base_url();
         $data["is_deleted"] = $current_route == "trash_form_listing" ? 1 : 0;
+        $data['user_role'] = $user_role;
         $this->smarty->loadView('form_listing.tpl', $data,'Yes','Yes');
     }
 
@@ -337,7 +341,7 @@ class Form extends MY_Controller {
                             <i class="ti ti-clock"></i>
                         </span>';
                     }
-                    if(checkGroupAccess("form_listing","import","No")){
+                    if(checkGroupAccess("form_listing","import","No") ){
                         $data[$key]['action'] .= '  
                             <span class="upload-school-data" title="Import Data"  data-id="'.$val['school_id'].'">
                                 <i class="ti ti-upload"></i>
@@ -918,6 +922,7 @@ class Form extends MY_Controller {
         if (!( (!empty($upload_error_msg) && count($upload_error_msg) > 0) || 
             (!empty($template_error_msg) && count($template_error_msg) > 0))) {
                 $template_details['school_image'] = $school_image;
+                $template_details['form_type'] = $form_type;
                 if($user_role == "ChannelPartner" ){
                     $template_image = $this->generateFormChanelPartTemplate($template_details); 
                 }else{
@@ -1135,6 +1140,7 @@ class Form extends MY_Controller {
             $template_image = "";
             if(!(count($upload_error_msg) > 0 || count($template_error_msg) > 0)){
                 $template_details['school_image'] = $school_image;
+                $template_details['form_type'] = $form_type;
                 if($user_role == "ChannelPartner" ){
                     $template_image = $this->generateFormChanelPartTemplate($template_details); 
                 }else{
@@ -1231,73 +1237,178 @@ class Form extends MY_Controller {
         }
         $upload_error_msg = [];
         foreach ($_FILES as $key => $value) {
-            // Get the uploaded image
+
             $profileImageData = $_FILES[$key]["name"] != "" ? $_FILES[$key] : [];
             $fileName = $_FILES[$key]['name'];
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
             $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
+
             $folderPath .= "/".$key;
-            // Ensure the folder exists, if not, create it
+
             if (!is_dir($folderPath) && $folderPath != "") {
                 mkdir($folderPath, 0777, true);
             }
-            // Set upload configuration
+
             $config["upload_path"] = $folderPath;
-            $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";  // Allow jpg, png, and jpeg files
+            $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";
             $config['max_size'] = 10240;
+
             $this->load->library("upload", $config);
             $this->upload->initialize($config);
+
             if (!empty($profileImageData)) {
-                
+
                 if (!$this->upload->do_upload($key)) {
-                    // If upload fails, store the error message
+
                     $error = $this->upload->display_errors('', '');
+
                     if (strpos($error, 'filetype') !== false) {
                         $custom_error = 'Only JPG, PNG, JPEG, BMP, and HEIC files are allowed.';
                     } elseif (strpos($error, 'The file you are attempting to upload is larger than the permitted size.') !== false) {
                         $custom_error = 'The file is too large. Maximum allowed size is 10 MB.';
                     } else {
-                        $custom_error = $error; // fallback to default message
+                        $custom_error = $error;
                     }
-                    $upload_error_msg = $error = [
+
+                    $upload_error_msg = [
                         "error" => $custom_error,
                     ];
                     $upload_error = 1;
                     $image_arr[$key] = "";
+
                 } else {
-                    // Upload successful, get the uploaded file data
+
                     $upload_data = $this->upload->data();
                     $uploadedFilePath = $folderPath . "/" . $upload_data['file_name'];
 
-                    // Convert image to JPG if it's PNG or JPEG
+                    // 🔥 STEP 1: Convert to JPG if needed
                     $fileType = strtolower(pathinfo($uploadedFilePath, PATHINFO_EXTENSION));
+
                     if ($fileType == 'png' || $fileType == 'jpeg') {
+
                         $newFilePath = $folderPath . "/" . pathinfo($upload_data['file_name'], PATHINFO_FILENAME) . '.jpg';
 
-                        // Load the image depending on its type
                         if ($fileType == 'png') {
                             $image = imagecreatefrompng($uploadedFilePath);
-                        } elseif ($fileType == 'jpeg') {
+                        } else {
                             $image = imagecreatefromjpeg($uploadedFilePath);
                         }
 
-                        // Save the image as JPG
-                        imagejpeg($image, $newFilePath, 90); // Save with 90% quality
-                        imagedestroy($image); // Free memory
-
-                        // Delete the original uploaded PNG/JPEG file
+                        imagejpeg($image, $newFilePath, 90);
+                        imagedestroy($image);
                         unlink($uploadedFilePath);
 
-                        // Update the image path to the new JPG
-                        $image_arr[$key] = $newFilePath;
+                        $finalPath = $newFilePath;
+
                     } else {
-                        // If already JPG, just use the uploaded file
-                        $image_arr[$key] = $uploadedFilePath;
+                        $finalPath = $uploadedFilePath;
                     }
+
+                    // 🔥 STEP 2: Resize large images (important)
+                    list($width, $height) = getimagesize($finalPath);
+                    $maxWidth = 1920;
+
+                    if ($width > $maxWidth) {
+
+                        $ratio = $height / $width;
+                        $newWidth = $maxWidth;
+                        $newHeight = $maxWidth * $ratio;
+
+                        $src = imagecreatefromjpeg($finalPath);
+                        $dst = imagecreatetruecolor($newWidth, $newHeight);
+
+                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                        imagejpeg($dst, $finalPath, 85);
+
+                        imagedestroy($src);
+                        imagedestroy($dst);
+                    }
+
+                    // 🔥 STEP 3: Compress to ~2–2.5 MB
+                    $maxSize = 2.5 * 1024 * 1024; // 2.5MB
+                    $quality = 85;
+
+                    while (filesize($finalPath) > $maxSize && $quality > 30) {
+                        $image = imagecreatefromjpeg($finalPath);
+                        imagejpeg($image, $finalPath, $quality);
+                        imagedestroy($image);
+                        $quality -= 5;
+                    }
+
+                    $image_arr[$key] = $finalPath;
                 }
             }
         }
         
+        // foreach ($_FILES as $key => $value) {
+        //     // Get the uploaded image
+        //     $profileImageData = $_FILES[$key]["name"] != "" ? $_FILES[$key] : [];
+        //     $fileName = $_FILES[$key]['name'];
+        //     $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        //     $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
+        //     $folderPath .= "/".$key;
+        //     // Ensure the folder exists, if not, create it
+        //     if (!is_dir($folderPath) && $folderPath != "") {
+        //         mkdir($folderPath, 0777, true);
+        //     }
+        //     // Set upload configuration
+        //     $config["upload_path"] = $folderPath;
+        //     $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";  // Allow jpg, png, and jpeg files
+        //     $config['max_size'] = 10240;
+        //     $this->load->library("upload", $config);
+        //     $this->upload->initialize($config);
+        //     if (!empty($profileImageData)) {
+                
+        //         if (!$this->upload->do_upload($key)) {
+        //             // If upload fails, store the error message
+        //             $error = $this->upload->display_errors('', '');
+        //             if (strpos($error, 'filetype') !== false) {
+        //                 $custom_error = 'Only JPG, PNG, JPEG, BMP, and HEIC files are allowed.';
+        //             } elseif (strpos($error, 'The file you are attempting to upload is larger than the permitted size.') !== false) {
+        //                 $custom_error = 'The file is too large. Maximum allowed size is 10 MB.';
+        //             } else {
+        //                 $custom_error = $error; // fallback to default message
+        //             }
+        //             $upload_error_msg = $error = [
+        //                 "error" => $custom_error,
+        //             ];
+        //             $upload_error = 1;
+        //             $image_arr[$key] = "";
+        //         } else {
+        //             // Upload successful, get the uploaded file data
+        //             $upload_data = $this->upload->data();
+        //             $uploadedFilePath = $folderPath . "/" . $upload_data['file_name'];
+
+        //             // Convert image to JPG if it's PNG or JPEG
+        //             $fileType = strtolower(pathinfo($uploadedFilePath, PATHINFO_EXTENSION));
+        //             if ($fileType == 'png' || $fileType == 'jpeg') {
+        //                 $newFilePath = $folderPath . "/" . pathinfo($upload_data['file_name'], PATHINFO_FILENAME) . '.jpg';
+
+        //                 // Load the image depending on its type
+        //                 if ($fileType == 'png') {
+        //                     $image = imagecreatefrompng($uploadedFilePath);
+        //                 } elseif ($fileType == 'jpeg') {
+        //                     $image = imagecreatefromjpeg($uploadedFilePath);
+        //                 }
+
+        //                 // Save the image as JPG
+        //                 imagejpeg($image, $newFilePath, 90); // Save with 90% quality
+        //                 imagedestroy($image); // Free memory
+
+        //                 // Delete the original uploaded PNG/JPEG file
+        //                 unlink($uploadedFilePath);
+
+        //                 // Update the image path to the new JPG
+        //                 $image_arr[$key] = $newFilePath;
+        //             } else {
+        //                 // If already JPG, just use the uploaded file
+        //                 $image_arr[$key] = $uploadedFilePath;
+        //             }
+        //         }
+        //     }
+        // }
+
         $form_data_json = [];
         foreach ($form_fields as $key => $value) {
             $field_data = json_decode($value['field_data'],TRUE);
@@ -2556,7 +2667,6 @@ class Form extends MY_Controller {
 		/**
 		 * Dynamic Banner Generator (PHP GD)
 		 */
-
 		$template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/template.png";
 		$fontBold =dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
 
@@ -2576,7 +2686,8 @@ class Form extends MY_Controller {
 		$mobile          = "M-".$details['mobile'];
 		$website         = "www.bharatidcard.com";
 		$channelPartner  = strtoupper(trim($details['channelPartner']));
-		$section         = "STUDENT ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);
+        $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
+		$section         = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);
         
 		// Optional: Make school name uppercase (like your sample)
 		$school_name = strtoupper(trim($school_name));
@@ -2889,6 +3000,7 @@ class Form extends MY_Controller {
 		 * Dynamic Banner Generator (PHP GD)
 		 */
 
+        
 		$template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_template.png";
 		$fontBold = dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
 		// pr($fontBold,1);
@@ -2907,7 +3019,8 @@ class Form extends MY_Controller {
 		$school_name     = $details['school_name'];
 		$mobile          = "M-".$details['school_name'];
 		$website         = "www.bharatidcard.com";
-		$section         = "STUDENT ID CARD DATA COLLECTION FORM SESSION-2025-26";
+        $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
+		$section         = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);
 
 		// Optional: Make school name uppercase (like your sample)
 		$school_name = strtoupper(trim($school_name));
@@ -3101,7 +3214,7 @@ class Form extends MY_Controller {
         // -------------------------
         $schoolName = "INGOUDE ACADEMY";
         $schoolAddr = "123 Anywhere St, Any City, ST 12345";
-        $photoPath  = FCPATH . "public/student.png"; // student photo (png)
+        $photoPath  = FCPATH . "public/no-image.jpg"; // student photo (png)
 
         $fields = [
             "Name"        => "GAYATRI HEDAUA",
@@ -3523,7 +3636,7 @@ class Form extends MY_Controller {
         $schoolAddr = $school_detail['school_address'];
         // $schoolName  = "INGOUDE ACADEMY";
         // $schoolAddr  = "123 Anywhere St, Any City, ST 12345";
-        $photoPath   = $image != "" && $image != null ? str_replace(base_url(),FCPATH,$image) : FCPATH . "public/student.png"; // you can make dynamic later
+        $photoPath   = $image != "" && $image != null ? str_replace(base_url(),FCPATH,$image) : FCPATH . "public/no-image.jpg"; // you can make dynamic later
         $srialNumber = "Sr. No. : " . $index;
         
         // -------------------------

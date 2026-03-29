@@ -9,7 +9,7 @@
          <a class="nav-link" href="<%$base_url%>dashboard">Dashboard</a>
          </li> 
       <%/if%>
-      <%if checkGroupAccess("group_master","list","No") || checkGroupAccess("user_list","list","No") %>
+      <%if $session_data['role'] == "SuperAdmin" && (checkGroupAccess("group_master","list","No") || checkGroupAccess("user_list","list","No")) %>
       <li class="nav-item dropdown">
          <a class="nav-link dropdown-toggle" href="javascript:void(0)" id="navbarDropdownMenuLinkPurchase" role="button" data-bs-toggle="dropdown" aria-expanded="false">
          User Management
@@ -39,29 +39,44 @@
          </ul>
       </li>
       <%/if%>
-      <%if checkGroupAccess("form_listing","list","No") || checkGroupAccess("form_field_listing","list","No") %>
-      <li class="nav-item dropdown">
-         <a class="nav-link dropdown-toggle" href="javascript:void(0)" id="navbarDropdownMenuLinkPurchase" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-         Data Management
-         </a>
-         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkPurchaseSubmenu">
-            <%if checkGroupAccess("form_listing","list","No") %>
-            <li>
-               <a href="<%$base_url%>form_listing" class="dropdown-item"> College/School Master</a>
-            </li>
-            <%/if%>
-            <!-- <li>
-               <a href="<%$base_url%>form_listing" class="dropdown-item">Form Listing</a>
-            </li> -->
-            <%if checkGroupAccess("form_field_listing","list","No") %>
-            <li>
-               <a href="<%$base_url%>form_field_listing" class="dropdown-item">Form Field Master</a>
-            </li>
-            <%/if%>
-            
-         </ul>
-      </li>
-   <%/if%>
+      <%if $session_data['role'] != "SuperAdmin" &&  checkGroupAccess("user_list","list","No") %>
+      <li class="nav-item">
+         <a class="nav-link" href="<%$base_url%>user_list">User</a>
+         </li> 
+      <%/if%>
+      <%*<%if checkGroupAccess("form_listing","list","No") || checkGroupAccess("form_field_listing","list","No") %>
+         <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="javascript:void(0)" id="navbarDropdownMenuLinkPurchase" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Data Management
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkPurchaseSubmenu">
+               <%if checkGroupAccess("form_listing","list","No") %>
+               <li>
+                  <a href="<%$base_url%>form_listing" class="dropdown-item"> College/School Master</a>
+               </li>
+               <%/if%>
+               <!-- <li>
+                  <a href="<%$base_url%>form_listing" class="dropdown-item">Form Listing</a>
+               </li> -->
+               <%if checkGroupAccess("form_field_listing","list","No") %>
+               <li>
+                  <a href="<%$base_url%>form_field_listing" class="dropdown-item">Form Field Master</a>
+               </li>
+               <%/if%>
+               
+            </ul>
+         </li>
+      <%/if%>*%>
+      <%if checkGroupAccess("form_listing","list","No") %>
+      <li class="nav-item">
+         <a class="nav-link" href="<%$base_url%>form_listing">College/School Master</a>
+         </li> 
+      <%/if%>
+      <%if checkGroupAccess("form_field_listing","list","No") %>
+      <li class="nav-item">
+         <a class="nav-link" href="<%$base_url%>form_field_listing">Form Field Master</a>
+         </li> 
+      <%/if%>
       <%if checkGroupAccess("trash_form_listing","list","No") %>
       <li class="nav-item">
          <a class="nav-link" href="<%$base_url%>trash_form_listing">Recycle Bin</a>

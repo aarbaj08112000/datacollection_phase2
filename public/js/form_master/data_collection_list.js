@@ -356,112 +356,93 @@ const page = {
                     }
                 },
                 {
-                  extend: 'excelHtml5',
-                  text: '',
-                  titleAttr: 'Download Excel',
-                  filename: file_name,
-                   customizeData: function (data) {
-                    data.header.shift();
-                    data.header.pop();
-                    data.body.forEach(function(row){
-                      row.shift();
-                      row.pop();
-                    });
+    extend: 'excelHtml5',
+    text: '',
+    titleAttr: 'Download Excel',
+    filename: file_name,
 
-                    // optional: remove from footer if exists
-                    if (data.footer && data.footer.length) {
-                      data.footer.pop();
+    customizeData: function (data) {
+
+        // ✅ 1. Remove Image column FIRST
+        let imageColIndex = data.header.indexOf("Image");
+
+        if (imageColIndex !== -1) {
+            data.header.splice(imageColIndex, 1);
+
+            data.body.forEach(function(row){
+                row.splice(imageColIndex, 1);
+            });
+
+            if (data.footer && data.footer.length) {
+                data.footer.forEach(function(row){
+                    row.splice(imageColIndex, 1);
+                });
+            }
+        }
+
+        // ✅ 2. Remove first & last column
+        data.header.shift();
+        data.header.pop();
+
+        data.body.forEach(function(row){
+            row.shift();
+            row.pop();
+        });
+
+        // ✅ 3. Footer fix
+        if (data.footer && data.footer.length) {
+            data.footer.forEach(function(row){
+                row.pop();
+            });
+        }
+
+        // ✅ 4. SAFE image handling (only if column still exists)
+        $('#form_data_listing tbody tr').each(function (rowIndex) {
+            $(this).find('td').each(function (colIndex) {
+
+                let $info = $(this).find(".image-info");
+
+                if ($info.length > 0) {
+                    let imageUrl = $info.attr('data-image') || 'No Image';
+                    let imageName = imageUrl.split('/').pop();
+
+                    if (data.body[rowIndex] && data.body[rowIndex][colIndex] !== undefined) {
+                        data.body[rowIndex][colIndex] = imageName.replace(".jpg", "");
                     }
-                    $('#form_data_listing tbody tr').each(function (rowIndex) {
-                      $(this).find('td').each(function (colIndex) {
-                        let $info = $(this).find(".image-info");
-                        if ($info.length > 0) {
-                            let imageUrl = $info.attr('data-image') || 'No Image';
-                            let imageName = imageUrl.split('/').pop(); // In case it's a full URL or path
-                            data.body[rowIndex][colIndex] = imageName.replace(".jpg", "");
-                        }
-                    });
-                    
-                  });
-                },
-                //   customizeData: function (data) {
-                //     // ✅ Loop through each row
-                //     $('#form_data_listing tbody tr').each(function (rowIndex) {
-                //         $(this).find('td').each(function (colIndex) {
-                //           console.log($(this).find("img"))
-                //           if($(this).find("img").length > 0){
-                //             let cell = $(this).html();
-    
-                //             // ✅ Check for image tag
-                //             if ($(cell).is('img')) {
-                //                 let imgUrl = $(cell).attr('data-image') || 'No Image URL';
-    
-                //                 // ✅ Replace image with URL in exported Excel data
-                //                 data.body[rowIndex][colIndex] = imgUrl;
-                //             }
-                //           }
-                //         });
-                //     });
-                // },
-                  customize: function (xlsx) {
-                      let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                      let $sheet = $(sheet);
-              
-                      // ✅ Set custom page margins
-                      $sheet.find('pageMargins').attr({
-                          'left': '0.5',
-                          'right': '0.5',
-                          'top': '0.75',
-                          'bottom': '0.75',
-                          'header': '0.3',
-                          'footer': '0.3'
-                      });
-              
-              
-                      
-              
-                      // ✅ Remove specific columns (A, B, F)
-                      // const removeCols = ['A'];  // Columns to remove
-              
-                      // $sheet.find('row').each(function () {
-                      //     $(this).find('c').each(function () {
-                      //         let ref = $(this).attr('r');
-                      //         if (ref) {
-                      //             let col = ref.match(/[A-Z]+/)[0];  // Extract column letter
-                      //             if (removeCols.includes(col)) {
-                      //                 $(this).remove();
-                      //             }
-                      //         }
-                      //     });
-                      // });
-              
-                      // ✅ Shift remaining cells to the left
-                    //   $sheet.find('row').each(function () {
-                    //       let currentCol = 0;  // Track current column position
-                    //       $(this).find('c').each(function () {
-                    //           let ref = $(this).attr('r');
-                    //           if (ref) {
-                    //               let rowNum = ref.match(/\d+/)[0];      // Extract row number
-                    //               let newCol = String.fromCharCode(65 + currentCol);  // Shift columns (A=65)
-                    //               $(this).attr('r', `${newCol}${rowNum}`);
-                    //               currentCol++;
-                    //           }
-                    //       });
-                    //   });
-                      // ✅ Set all column widths to approximately 20px
-        let colCount = $sheet.find('row:first c').length;  // Get the total number of columns
+                }
+
+            });
+        });
+
+    },
+
+    customize: function (xlsx) {
+        let sheet = xlsx.xl.worksheets['sheet1.xml'];
+        let $sheet = $(sheet);
+
+        // ✅ Page margins
+        $sheet.find('pageMargins').attr({
+            'left': '0.5',
+            'right': '0.5',
+            'top': '0.75',
+            'bottom': '0.75',
+            'header': '0.3',
+            'footer': '0.3'
+        });
+
+        // ✅ Set column width
+        let colCount = $sheet.find('row:first c').length;
         let colsXml = '<cols>';
-        
+
         for (let i = 1; i <= colCount; i++) {
             colsXml += `<col min="${i}" max="${i}" width="2.14" customWidth="1"/>`;
         }
-        
+
         colsXml += '</cols>';
 
-        // Insert column width settings before the sheet data
         $sheet.find('sheetData').before(colsXml);
-                  }
-              }
+    }
+}
               
             ],
             orderCellsTop: true,

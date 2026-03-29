@@ -6,6 +6,10 @@ var courseToken = "";
 var redirect_url = "";
 const page = {
     init: function(){
+        $('[data-toggle="tooltip"]').tooltip({
+            placement: 'top',
+            offset: '0,10'   // x , y
+        });
         $("#sortable").sortable({
                 placeholder: "ui-state-highlight"  // Adds a placeholder while dragging
         });
@@ -68,7 +72,7 @@ const page = {
                       maxlength: 300,
                    },
                    comment: {
-                       required: true,
+                    //    required: true,
                        minlength: 10,            
                        maxlength: 1000,
                    }

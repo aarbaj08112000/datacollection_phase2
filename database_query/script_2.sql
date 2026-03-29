@@ -1,37 +1,13 @@
-CREATE TABLE `data_collection`.`registration_otp` ( `registration_otp_id` INT NOT NULL AUTO_INCREMENT , `code` VARCHAR(266) NOT NULL , `otp` INT(6) NOT NULL , PRIMARY KEY (`registration_otp_id`)) ENGINE = InnoDB;
+CREATE TABLE `registration_otp` ( `registration_otp_id` INT NOT NULL AUTO_INCREMENT , `code` VARCHAR(266) NOT NULL , `otp` INT(6) NOT NULL , PRIMARY KEY (`registration_otp_id`)) ENGINE = InnoDB;
 ALTER TABLE `userinfo` ADD `extra_json` JSON NULL AFTER `status`;
 ALTER TABLE `school_matser` CHANGE `status` `status` ENUM('Active','Inactive','PendingApproval') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Active';
 INSERT INTO `config_setting` (`id`, `name`, `title`, `value`, `description`, `type`, `company_id`) VALUES (NULL, 'linkPaymentQr', 'Link Payment Qr Code ', 'public/assets/payment_qr/qrcode.png', 'Link Payment Qr Code ', 'input', '1');
 INSERT INTO `config_setting` (`id`, `name`, `title`, `value`, `description`, `type`, `company_id`) VALUES (NULL, 'whatsAppNumber', 'whats App Number', '8485835691', 'whats App Number', 'input', '1');
 INSERT INTO `menu_master` (`menu_master_id`, `menu_category_id`, `diaplay_name`, `url`, `status`) VALUES (NULL, '1', 'Group Field Configuration', 'field_selection_list', 'Active'), (NULL, '1', 'Configuration Settings', 'config_setting_list', 'Active');
 
--- phpMyAdmin SQL Dump
--- version 4.9.10
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Feb 17, 2026 at 04:04 PM
--- Server version: 8.0.42-0ubuntu0.20.04.1
--- PHP Version: 7.0.33-75+ubuntu20.04.1+deb.sury.org+1
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
-START TRANSACTION;
-SET time_zone = "+00:00";
-
---
--- Database: `phase3_sheet`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `widget`
---
-
 CREATE TABLE `widget` (
   `widget_id` int NOT NULL,
-  `tab_name` enum('Sales','Account','PurchaseGRN','Stores','Production','BusinessAnalytics','Quality','Subcon','PendingTask') COLLATE utf8mb4_general_ci NOT NULL,
+  `tab_name` enum('OverViewDetails','ChannelPatnerDetails','SchoolDetails') COLLATE utf8mb4_general_ci NOT NULL,
   `widget_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `widget_type` enum('Block','SingleBar','DoubleBar','Pie','SemiCircle','SingleColumnBar','Table','Spline','ImageBlock') COLLATE utf8mb4_general_ci NOT NULL,
   `widget_funtion` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -77,3 +53,45 @@ INSERT INTO `widget` (`tab_name`, `widget_name`, `widget_type`, `widget_funtion`
 
 INSERT INTO `menu_category` (`menu_category_id`, `menu_category_code`, `menu_category_name`) VALUES (NULL, '', ''), (NULL, 'dashboard', 'Dashboard');
 INSERT INTO `menu_master` (`menu_master_id`, `menu_category_id`, `diaplay_name`, `url`, `status`) VALUES (NULL, '4', 'Overall Detail Tab', 'overall_detail_tab', 'Active'), (NULL, '4', 'Channel Patner Tab', 'channel_patner_tab', 'Inactive'), (NULL, '4', 'School Tab', 'school_tab', 'Active');
+
+
+
+
+
+CREATE TABLE `group_field_config` (
+  `id` int NOT NULL,
+  `group_master_id` int NOT NULL,
+  `selected_fields` text COLLATE utf8mb4_general_ci NOT NULL COMMENT 'JSON array of field IDs from form_field_master',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores field visibility configuration per user group';
+
+--
+-- Dumping data for table `group_field_config`
+--
+
+INSERT INTO `group_field_config` (`id`, `group_master_id`, `selected_fields`, `created_at`) VALUES
+(1, 6, '[\"16\",\"17\",\"18\",\"19\",\"20\",\"22\"]', '2026-02-17 13:01:45');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `group_field_config`
+--
+ALTER TABLE `group_field_config`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_group` (`group_master_id`),
+  ADD KEY `idx_group_master_id` (`group_master_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `group_field_config`
+--
+ALTER TABLE `group_field_config`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+COMMIT;
