@@ -124,14 +124,14 @@
         
         <input type="hidden" name="school_id" value="<%$school_data['school_id']%>" />
           <div class="col-md-4 <%if $user_role eq 'School'%>hide<%/if%>">
-            <label for="name" class="form-label fs-6">Name<span class="text-danger ms-1">*</span></label>
-            <input type="text" class="form-control" id="school_name" placeholder="Enter your name" name="name" value="<%$school_data['name']%>">
+            <label for="name" class="form-label fs-6">School/Collage/Office Name<span class="text-danger ms-1">*</span></label>
+            <input type="text" class="form-control" id="school_name" placeholder="Enter your name" name="school_name" value="<%$school_data['name']%>">
           </div>
           <div class="col-md-4 hide">
             <label for="url" class="form-label fs-6">URL<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="url" placeholder="Enter your website" name="url" value="<%$school_data['url']%>" readonly>
           </div>
-          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
+          <div class="col-md-4 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%>">
             <div class="radio-box">
             <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
             <br>
@@ -149,11 +149,11 @@
             </div>
             </div>
           </div>
-          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
+          <div class="col-md-4 <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="url" class="form-label fs-6">Contact Person<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control"  placeholder="Enter contact person" name="contact_person" value="<%$school_data['contact_person']%>">
           </div>
-          <div class="col-md-4 mt-3 <%if $user_role eq 'School'%>hide<%/if%>">
+          <div class="col-md-4  <%if $user_role eq 'School'%>hide<%/if%>">
             <label for="url" class="form-label fs-6">Mobile Number<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control onlyNumericInput"  placeholder="Enter mobile number" name="mobile_number" value="<%$school_data['mobile_number']%>">
           </div>
@@ -162,20 +162,20 @@
             <input type="text" class="form-control"  placeholder="Enter designation" name="designation" value="<%$school_data['designation']%>">
           </div>
           
-          <div class="col-md-4 mt-3 course-row-box">
+          <div class="col-md-4 mt-3 course-row-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-6">Course<span class="text-danger ms-1">*</span></label>
+            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class</span><span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Course predefined values are available in the dropdown. You can select multiple options if required. If you need a new course value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
             <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select course" name="course" />
             </div>
           </div>
-          <div class="col-md-4 mt-3 section-box">
+          <div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1">*</span></label>
+            <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="Section predefined values are available in the dropdown. You can select multiple options if required. If you need a new section value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="sectionToken" type="text" class="form-control autocomplete" placeholder="Select section" name="section" />
             </div>
-          </div><div class="col-md-4 mt-3 section-box">
+          </div><div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-6">House<span class="text-danger ms-1"></span></label>
+            <label for="url" class="form-label fs-6">House<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="If you need a house value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="houseToken" type="text" class="form-control autocomplete" placeholder="Select house" name="house" />
             </div>
           </div>
@@ -203,7 +203,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4 mt-3 ">
+        <div class="col-md-4 mt-3 <%if $school_data['form_type'] eq 'school' && ($user_role eq 'School' || $user_role eq 'ChannelPartner')%>hide<%/if%>">
           <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">Comment<span class="text-danger ms-1"></span></label>
             <textarea name="comment" class="form-control textarea1"  maxlength="1000" placeholder="Enter Address"autofocus><%$school_data['comment']%></textarea>
@@ -237,7 +237,7 @@
       
         <div class="row mt-3">
         <div class="col-md-12">
-          <label class="form-label fs-6">Select the form fields:<span class="text-danger ms-1">*</span></label>
+          <label class="form-label fs-6 my-3">Select the form fields:<span class="text-danger ms-1">*</span></label><span class="float-end  my-3"><b style="    color: red;">Note</b> : If you want to change the sequence of fields, you can drag and drop the fields.</span>
           <div class="d-flex flex-wrap gap-3 " id="sortable">
             <%foreach from=$field_data key=key item='feild'%>
             <div class="form-check border ui-state-default position-relative" style="width: 24%;    cursor: move;">
@@ -289,12 +289,22 @@
          width: 298px !important;
          display: block;
       }
+       .custom-tooltip .tooltip-inner {
+    max-width: 400px;
+    white-space: normal;
+}
+.tooltip-inner {
+    max-width: 500px;
+    white-space: normal;
+}
     </style>
     <script type="text/javascript">
         var base_url = <%$base_url|@json_encode%>
         var courses = <%$school_data['course']|@json_encode%>;
         var sections = <%$school_data['section']|@json_encode%>;
         var houses = <%$school_data['house']|@json_encode%>;
+        var form_type_val = "<%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>Yes<%/if%>";
+        
         $('.textarea').keyup(function() {
     
   var characterCount = $(this).val().length,

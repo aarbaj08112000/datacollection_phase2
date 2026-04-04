@@ -388,6 +388,11 @@ class Dashboard extends MY_Controller
         $count_arr['count'] = $user_data['total_user'];// - $total_discount;
         return $count_arr;
     }
+    public function get_pending_links($year = '',$month_arr = []){
+        $user_data = $this->Dashboard_model->get_pending_links();
+        $count_arr['count'] = $user_data['total_user'];// - $total_discount;
+        return $count_arr;
+    }
 
 
 }

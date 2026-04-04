@@ -5,7 +5,7 @@ use Dompdf\Dompdf;
 class Form extends MY_Controller {
     public function __construct() {
         parent::__construct();
-        // sent_registration_completed("jasvd asdjd","8485835691");
+        // sent_link_approved("Aarbaj","8485835691");
         $this->load->model('Form_model');
         require_once(APPPATH.'libraries/tcpdf/tcpdf.php');
     }
@@ -43,7 +43,7 @@ class Form extends MY_Controller {
         $data['payment_qr'] = base_url($this->config->item("linkPaymentQr"));
         $data['whats_app_number'] = $this->config->item("whatsAppNumber");
         // pr($data['payment_qr'],1);
-        $this->smarty->loadView('form.tpl', $data,'Yes','Yes');
+    $this->smarty->loadView('form.tpl', $data,'Yes','Yes');
     }
     public function form_creation_edit()
     {
@@ -111,9 +111,11 @@ class Form extends MY_Controller {
     public function formListing()
     {
         // $this->generateStudentIdCard();
+        $get_data = $this->input->get();
         $current_route = $this->uri->segment(1);
         checkGroupAccess($current_route,"list","Yes");
         $user_role = $this->session->userdata("role");
+        $data["filter_status"] = isset($get_data['status']) ? $get_data['status'] : "";
         if($user_role != "School"){
             $column[] = [
                 "data" => "image",
@@ -127,6 +129,14 @@ class Form extends MY_Controller {
                 "width" => "10%",
                 "className" => "dt-left",
             ];
+        }
+        if($user_role != "ChannelPartner" || $user_role != "School"){
+        $column[] = [
+            "data" => "type",
+            "title" => "Type",
+            "width" => "5%",
+            "className" => "dt-center",
+        ];
         }
         $column[] = [
             "data" => "url",
@@ -281,11 +291,13 @@ class Form extends MY_Controller {
         $condition_arr["length"] = $post_data["length"];
         $base_url = $this->config->item("base_url");
         $is_deleted = $post_data['data']['is_deleted'];
-        $data = $this->Form_model->getSchoolData($condition_arr,$post_data["search"],$is_deleted);
+        $status = $post_data['data']['filter_status'];
+        $data = $this->Form_model->getSchoolData($condition_arr,$post_data["search"],$is_deleted,$status);
         foreach ($data as $key => $val) {
             $data[$key]['image'] = "<img src='".base_url($val['image'])."' alt='' width='75' height='75' title='College Logo'>";
             $data[$key]['url'] ='<a href="' . base_url("form/" . base64_encode($val['url'])) . '" target="_blank">' . base_url("form/" . base64_encode($val['url'])) . '</a>';
             $data[$key]['channel_patner'] = display_no_character($val['channel_patner']);
+            $data[$key]['type'] = display_no_character(getStatusTitle($val['form_type']));
             $data[$key]['address'] = display_no_character($val['address']);
             $data[$key]['comment'] = display_no_character($val['comment']);
             $edit_url = base_url("/form_creation_edit/".$val['school_id']);
@@ -348,7 +360,7 @@ class Form extends MY_Controller {
                             </span>
                             ';
                     }
-                    if(!in_array($user_role,["School"])){
+                    if(!in_array($user_role,["School","ChannelPartner"])){
                     $data[$key]['action'] .= '  
                             <a href="idcard/designer/' . $val['school_id'] . '" title="Change template">
                                 <span class="" data-id="' . $val['school_id'] . '">
@@ -365,7 +377,7 @@ class Form extends MY_Controller {
         
         $data["data"] = $data;
         // pr($data,1);
-        $total_record = $this->Form_model->getSchoolDataCount([], $post_data["search"],$is_deleted);
+        $total_record = $this->Form_model->getSchoolDataCount([], $post_data["search"],$is_deleted,$status);
         $data["recordsTotal"] = $total_record['total_record'];
         $data["recordsFiltered"] = $total_record['total_record'];
         echo json_encode($data);
@@ -401,10 +413,14 @@ class Form extends MY_Controller {
         $post_data = $this->input->post();
         $update_data = ["status"=>$post_data['status']];
         $school_data = $this->Form_model->getSchoolFormCollectionDetail($post_data['school_id']);
+        $userDetails = $this->Form_model->getUserDetails($school_data['added_by']);
         $old_status = $school_data['status'];
+        
         $this->Form_model->updateSchoolData($update_data,$post_data['school_id']);
-        if($old_status == "PendingApproval" && $post_data['status'] == "Active"){
-            sent_link_approved($school_data['name'],$school_data['mobile_number']);
+        if($old_status == "PendingApproval" && $post_data['status'] == "Active" && ($userDetails['user_role'] == "ChannelPartner" || $userDetails['user_role'] == "School")){
+            sent_link_approved($school_data['name'],$userDetails['user_mobile_number']);
+            $admin_mobile_number = $this->session->userdata("user_mobile_number");
+            sent_link_approved_admin($school_data['name'],$admin_mobile_number);
         }
         $ret_arr['messages'] = "Status updated successfully.";
         $ret_arr['success'] = 1;
@@ -826,6 +842,7 @@ class Form extends MY_Controller {
         $user_role = $this->session->userdata("role");
         $url = $post_data['url'];
         $status = "Active";
+        $msg_mobile = $post_data['mobile_number'];
         if($user_role == "ChannelPartner"){
             $name = $school_data['school_name'];
             $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
@@ -844,6 +861,7 @@ class Form extends MY_Controller {
                 "channelPartner" => $school_data['school_name'],
             ];
             $status = "PendingApproval";
+            $msg_mobile = $this->session->userdata("user_mobile_number");
             
         }else{
             $form_heder_type = $form_heder_type == "office" ? "STAFF" : "STUDENT";
@@ -984,13 +1002,15 @@ class Form extends MY_Controller {
                         "comment" => $post_data['comment'],
                         "status" => $status
                 );
-                // pr($data,1);
                 $inser_query = $this->Form_model->insertSchoolData($data);
                 // pr($this->db->last_query(),1);
                 if ($inser_query) {
                     if ($inser_query) {
                         if($status == "PendingApproval"){
-                            sent_link_generated($this->input->post('name'),$post_data['mobile_number']);
+                            sent_link_generated($data['name'],$msg_mobile);
+                            $user_admin_data = $this->Form_model->get_user_admin_data();
+                            $user_mobile_number = $user_admin_data['user_mobile_number'];
+                            sent_link_generated_admin($this->input->post('name'),$user_mobile_number);
                         }
                         $success = 1;
                         $msg = 'School date added successfully.';
@@ -1138,7 +1158,7 @@ class Form extends MY_Controller {
             // }
 
             $template_image = "";
-            if(!(count($upload_error_msg) > 0 || count($template_error_msg) > 0)){
+            if((!(count($upload_error_msg) > 0) || (is_array($template_error_msg) && count($template_error_msg) > 0))){
                 $template_details['school_image'] = $school_image;
                 $template_details['form_type'] = $form_type;
                 if($user_role == "ChannelPartner" ){
@@ -1156,7 +1176,7 @@ class Form extends MY_Controller {
         $ret_arr = [];
         $msg = 'Something went wrong';
         $success = 0;
-        if (count($upload_error_msg) > 0 || count($template_error_msg) > 0) {
+        if (count($upload_error_msg) > 0 || (is_array($template_error_msg) && count($template_error_msg) > 0)) {
             $msg = count($upload_error_msg) > 0
                 ? $upload_error_msg[error]
                 : $template_error_msg[error];
@@ -1292,7 +1312,7 @@ class Form extends MY_Controller {
                         if ($fileType == 'png') {
                             $image = imagecreatefrompng($uploadedFilePath);
                         } else {
-                            $image = imagecreatefromjpeg($uploadedFilePath);
+                            $image = createImageFromFile($uploadedFilePath);
                         }
 
                         imagejpeg($image, $newFilePath, 90);
@@ -1727,7 +1747,7 @@ class Form extends MY_Controller {
        // testing starts
         $design_data = $this->Form_model->getIdCardFieldComp($school_id);
         
-        if(count($design_data) > 0){
+        if(is_array($design_data) && count($design_data) > 0){
             $fieldsConfig = json_decode($design_data['design_data'],true);
             $config_arr = array_column($fieldsConfig,'type');
             $image_index = array_search('image',$config_arr);
@@ -2664,6 +2684,7 @@ class Form extends MY_Controller {
         return rmdir($folderPath);
     }
     public function generateFormChanelPartTemplate($details = []){
+        $school_data = $this->session->userdata("extra_json");
 		/**
 		 * Dynamic Banner Generator (PHP GD)
 		 */
@@ -2682,8 +2703,9 @@ class Form extends MY_Controller {
         // pr($details,1);
 
 		// Dynamic values (GET supported)
+        $user_mobile_number = $this->session->userdata("user_mobile_number");
 		$school_name     = $details['school_name'];
-		$mobile          = "M-".$details['mobile'];
+		$mobile          = "M-".$user_mobile_number.",".$school_data['school_contact_no'];
 		$website         = "www.bharatidcard.com";
 		$channelPartner  = strtoupper(trim($details['channelPartner']));
         $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
@@ -2901,10 +2923,11 @@ class Form extends MY_Controller {
 		// ----------------------------
 		// SCHOOL LOGO (top center)
 		// ----------------------------
-		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_logo.png";
+        
+		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/".$school_data['school_logo'];
+       
 		if (file_exists($logoPath)) {
-
-			$logo = imagecreatefrompng($logoPath);
+			$logo = createImageFromFile($logoPath);
 
 			$logoW = 100;
 			$logoH = 110;
@@ -2933,15 +2956,17 @@ class Form extends MY_Controller {
 			imagedestroy($logo);
 			imagedestroy($logoResized);
 		}
-
+        
 
 		// ----------------------------
 		// LEFT LOGO
 		// ----------------------------
-		$achoolPath = dirname(dirname(dirname(dirname(__DIR__))))."/public/form_template_Img/logo.png";
+        
+		$achoolPath = dirname(dirname(dirname(dirname(__DIR__))))."/".$details['school_image'];
+    
 		if (file_exists($achoolPath)) {
 
-			$logo = imagecreatefrompng($achoolPath);
+			$logo = createImageFromFile($achoolPath);
 
 			$logoW = 160;
 			$logoH = 160;
@@ -2986,7 +3011,6 @@ class Form extends MY_Controller {
         $absolutePath = $absolutePath . "/banner_" . time() . ".png";
 		// $savePath = $saveDir . "/banner_" . "135" . ".png";
 		imagepng($image, $savePath);
-
 
         return $absolutePath;
           
@@ -3106,10 +3130,10 @@ class Form extends MY_Controller {
 		// ----------------------------
 		// SCHOOL LOGO (top center)
 		// ----------------------------
-		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_logo.png";
+		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/logo.png";
 		if (file_exists($logoPath)) {
 
-			$logo = imagecreatefrompng($logoPath);
+			$logo = createImageFromFile($logoPath);
 
 			$logoW = 100;
 			$logoH = 110;
@@ -3145,7 +3169,7 @@ class Form extends MY_Controller {
 		$achoolPath = FCPATH.$details['school_image'];
 		if (file_exists($achoolPath)) {
 
-			$logo = imagecreatefrompng($achoolPath);
+			$logo = createImageFromFile($achoolPath);
 
 			$logoW = 160;
 			$logoH = 160;
@@ -3279,7 +3303,7 @@ class Form extends MY_Controller {
 
         if (file_exists($photoPath)) {
 
-            $photo = imagecreatefrompng($photoPath);
+            $photo = createImageFromFile($photoPath);
 
             $resized = imagecreatetruecolor($photoW, $photoH);
             imagealphablending($resized, false);

@@ -207,8 +207,10 @@ const page = {
     },
     dataTable: function(){
         var data = {
-          "is_deleted" : is_deleted 
+          "is_deleted" : is_deleted ,
+          "filter_status" : filter_status
         };
+        // filter_status = "";
         table = new DataTable("#school_listing", {
             dom: "Bfrtilp",
             autoWidth: false,

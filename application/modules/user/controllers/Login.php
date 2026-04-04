@@ -5,6 +5,7 @@ class Login extends MY_Controller {
         parent::__construct();
         $this->load->model('Login_model');
         $this->load->model('form_model');
+		// sent_link_generated("5691","8381058482");
     }
 	public function index() {
 		$data['base_url'] = base_url();
@@ -56,7 +57,7 @@ class Login extends MY_Controller {
 		$result = $this->Login_model->get_user_exist($post_data['email'],$post_data['contact_person_mobile']);
 		$success = 0;
 		$messages = "Something Went Wrong!";
-		if(count($result) > 0){
+		if(is_array($result) && count($result) > 0){
 			$messages = "User already exist with this email";
 		}else{
 			/* template image */
@@ -108,10 +109,12 @@ class Login extends MY_Controller {
 					"added_by" => 0,
 					"deleted" => 0
 				];
-				// pr($insert_data,1);
 				$result = $this->Login_model->insertUser($insert_data);
 				if($result > 0){
 					sent_registration_completed($post_data['contact_person_name'],$post_data['contact_person_mobile']);
+					$user_admin_data = $this->Login_model->get_user_admin_data();
+					$user_mobile_number = $user_admin_data['user_mobile_number'];
+					sent_registration_completed_admin($post_data['contact_person_name'],$user_mobile_number);
 					$success = 1;
 					$messages = "Registration successful. Your account will be approved by the admin. After approval, you can log in.";	
 				}

@@ -16,6 +16,15 @@ class Dashboard_model extends CI_Model
         if($date != "" && $date != null){
             $this->db->where("DATE(sm.added_date) =", $date);
         }
+		$role = $this->session->userdata("role");
+		$user_id = $this->session->userdata("user_id");
+		if($role == "ChannelPartner"){
+			$this->db->where("sm.channel_patner_id",$user_id);
+		}
+		if($role == "School"){
+			$this->db->where("sm.added_by",$user_id);
+		}
+		$data['selected_unit'] = $this->session->userdata('clientUnit');
         $this->db->group_by('sm.school_id');
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
@@ -220,6 +229,16 @@ class Dashboard_model extends CI_Model
 		$this->db->where("u.channel_patner_id > ",0);
 		$this->db->where('u.added_date >=', date('Y-01-01'));
 		$this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+	    $result_obj = $this->db->get();
+	    $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
+	    return $ret_data;
+	}
+
+	public function get_pending_links($year = '',$month_arr = '')
+	{
+	    $this->db->select('COUNT(u.school_id) as total_user');
+	    $this->db->from('school_matser as u');
+		$this->db->where("u.status","PendingApproval");
 	    $result_obj = $this->db->get();
 	    $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
 	    return $ret_data;

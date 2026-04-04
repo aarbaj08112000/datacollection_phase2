@@ -130,7 +130,7 @@
                                 <br>
                                 <div class="form-check form-check-inline">
                                   <input class="form-check-input" type="radio" name="form_heder_type" value="school" checked>
-                                  <label class="form-check-label" for="inlineRadio2">School</label>
+                                  <label class="form-check-label" for="inlineRadio2">Student</label>
                                 </div>
                                 <div class="form-check form-check-inline">
                                   <input class="form-check-input" type="radio" name="form_heder_type" value="office">
@@ -289,6 +289,7 @@
     var left_fix_column = <%$left_fix_column|json_encode%>;
     var is_deleted = <%$is_deleted|json_encode%>;
     var role = <%$user_role|json_encode%>;
+    var filter_status = <%$filter_status|json_encode%>
 </script>
 
     

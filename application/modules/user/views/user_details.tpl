@@ -125,6 +125,7 @@
                            <thead>
                               <tr>
                                  <th class="hide">Sr No</th> 
+                                 <th>School / Channel Partner</th>
                                  <th>Full Name</th>
                                  <th>Email</th>
                                  <th>Mobile Number</th>
@@ -141,7 +142,9 @@
                               <tr>
                                  <%assign var='units' value=explode(",",$u['unit_ids'])%>
                                  <%assign var='groups_arr' value=explode(",",$u['groups'])%>
+                                 <%assign var='extra_json' value=json_decode($u['extra_json'],TRUE)%>
                                  <td class="hide"><%$i %></td>
+                                 <td><%display_no_character($extra_json['school_name'])%></td>
                                  <td><%$u['user_name'] %></td>
                                  <td><%$u['user_email'] %></td>
                                  <td><%$u['user_mobile_number'] %></td>

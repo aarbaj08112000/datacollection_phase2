@@ -26,6 +26,7 @@ class User_model extends CI_Model {
                 $this->db->where("u.user_role","School");
             } 
         }
+        $this->db->order_by("u.id","DESC");
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
         return $ret_data;
@@ -123,4 +124,15 @@ class User_model extends CI_Model {
         $this->db->where('id', $user_id);
         $this->db->delete('userinfo');
     }
+    public function get_user_admin_data()
+	{
+		$this->db->select('u.*');
+		$this->db->from('userinfo u');
+		$this->db->where('u.user_role', "Admin");
+		$this->db->where('u.user_role !=', "SuperAdmin");
+		$this->db->order_by("u.id","ASC");
+		$query = $this->db->get();
+		$data = is_object($query) ? $query->row_array() : [];
+        return $data;
+	}
 }

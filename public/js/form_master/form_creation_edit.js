@@ -6,6 +6,10 @@ var courseToken = "";
 
 const page = {
     init: function(){
+        $('[data-toggle="tooltip"]').tooltip({
+            placement: 'top',
+            offset: '0,10'   // x , y
+        });
         $("#sortable").sortable({
                 placeholder: "ui-state-highlight"  // Adds a placeholder while dragging
         });
@@ -17,6 +21,16 @@ const page = {
            }																					
         })
         this.initTokenInput();
+        setTimeout(function () {
+            var selectedValue = $('input[name="form_heder_type"]:checked').val();
+            console.log(selectedValue)
+            $(".course-row-box .courser-tag").html('Course');
+
+            if (selectedValue === 'school') {
+                $(".course-row-box .courser-tag").html('Class');
+            }
+        }, 1000);
+        
     },
     formInitiate: function(){
     	let that = this;
@@ -49,11 +63,11 @@ const page = {
                     //    required: true
                     // },
                     course :{
-                       required: true
+                       required: form_type_val == "Yes" ? false : true
                     },
-                    section :{
-                       required: true
-                    },
+                    // section :{
+                    //    required: true
+                    // },
                     address: {
                         required: true,
                         minlength: 10,            
@@ -93,7 +107,7 @@ const page = {
                        required: "Please enter template"
                     },
                     course :{
-                       required: "Please enter course"
+                       required: "Please enter class"
                     },
                     section :{
                        required: "Please enter section"
@@ -307,9 +321,9 @@ const page = {
                 var newSource = [];
                 $('#courseToken').tokenfield('setTokens', []);
                 // Change source based on selected radio button
-                $(".course-row-box .form-label").html('Course<span class="text-danger ms-1">*</span>');
+                $(".course-row-box .courser-tag").html('Course');
                 if (selectedValue === 'school') {
-                  $(".course-row-box .form-label").html('Class<span class="text-danger ms-1">*</span>');
+                $(".course-row-box .courser-tag").html('Class');
                   $(".section-box").show();
                     newSource = ['Pre-Nursery', 'Nursery', 'UKG', 'LKG', 'KG-1', 'KG-2', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];  // Source for 'Collage'
                 } else if (selectedValue === 'collage') {

@@ -35,7 +35,7 @@ class Form_model extends CI_Model {
 
 
     /* school listing */
-    public function getSchoolData($condition_arr = [],$search_params = "",$is_deleted = 0){
+    public function getSchoolData($condition_arr = [],$search_params = "",$is_deleted = 0,$status = ""){
         
         $this->db->select('sm.*,COUNT(fdc.school_master_id) as total_record,ua.user_name as channel_patner');
         $this->db->from('school_matser sm');
@@ -45,6 +45,9 @@ class Form_model extends CI_Model {
             $this->db->where('sm.channel_patner_id',$this->session->userdata("user_id"));
         }
         $this->db->where('sm.is_delete',$is_deleted);
+        if($status != ""){
+           $this->db->where('sm.status',$status); 
+        }
         if (!empty($search_params['value'])) {
             $keyword = $search_params['value'];
             $this->db->group_start(); // Start a group of OR conditions
@@ -85,7 +88,7 @@ class Form_model extends CI_Model {
         return $ret_data;
     }
 
-    public function getSchoolDataCount($condition_arr = [],$search_params = "",$is_deleted = 0){
+    public function getSchoolDataCount($condition_arr = [],$search_params = "",$is_deleted = 0,$status = ""){
         
         $this->db->select('COUNT(sm.school_id) as total_record');
         $this->db->from('school_matser sm');
@@ -94,6 +97,9 @@ class Form_model extends CI_Model {
             $this->db->where('sm.channel_patner_id',$this->session->userdata("user_id"));
         }
         $this->db->where('sm.is_delete',$is_deleted);
+        if($status != ""){
+           $this->db->where('sm.status',$status); 
+        }
         if (!empty($search_params['value'])) {
             $keyword = $search_params['value'];
             $this->db->group_start(); // Start a group of OR conditions
@@ -364,6 +370,14 @@ class Form_model extends CI_Model {
         $ret_data = is_object($result_obj) ? $result_obj->result_array() : [];
         return $ret_data;
     }
+    public function getUserDetails($user_id){
+        $this->db->select('u.*');
+        $this->db->from('userinfo as u');
+        $this->db->where("u.id",$user_id);
+        $result_obj = $this->db->get();
+        $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
+        return $ret_data;
+    }
     public function checkChannelPatnerAccessFormData($channel_patner_id = 0,$school_id=0){
         $this->db->select('fdc.*');
         $this->db->from('school_matser as fdc');
@@ -454,6 +468,17 @@ class Form_model extends CI_Model {
         $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
         return $ret_data;
     }
+    public function get_user_admin_data()
+	{
+		$this->db->select('u.*');
+		$this->db->from('userinfo u');
+		$this->db->where('u.user_role', "Admin");
+		$this->db->where('u.user_role !=', "SuperAdmin");
+		$this->db->order_by("u.id","ASC");
+		$query = $this->db->get();
+		$data = is_object($query) ? $query->row_array() : [];
+        return $data;
+	}
 
     
     

@@ -112,6 +112,9 @@ class User extends MY_Controller {
                 if ($result) {
 					if($old_status == "Pending" && $status == "Active"){
 						sent_approved_account($data['user_name'],$data['user_mobile_number']);
+						$user_admin_data = $this->User_model->get_user_admin_data();
+						$user_mobile_number = $user_admin_data['user_mobile_number'];
+						sent_approved_account_admin($data['user_name'],$user_mobile_number);
 					}
                     // echo "<script>alert('User  Added Successfully');document.location='erp_users'</script>";
                     $msg = 'User Updated Successfully.';

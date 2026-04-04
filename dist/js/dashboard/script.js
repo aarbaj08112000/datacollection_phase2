@@ -46,6 +46,15 @@ var dashbord = {
     this.initiatePluggin();
     let tab_name  = $(".dashboard-nav-tab .nav-link").attr("data-tab");//"BusinessAnalytics";
     this.getCurrentWidget(tab_name,'','');
+    $(document).on('click','.addNewForm',function() {
+        $("#checkTypeOfForm").modal("show")
+    });
+    $("#checkTypeOfFormData").submit(function(e){
+        e.preventDefault();
+        var type = $("[name='form_heder_type']:checked").val();
+        type = btoa(type);
+        window.location.href = base_url+"form_creation?type="+type;
+    });
   },
   initiatePluggin: function(){
     let that = this;

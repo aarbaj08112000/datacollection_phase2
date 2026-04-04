@@ -27,21 +27,8 @@
                </h2>
             </div>
             <div class="w-50 drop-down-block ">
-               <div class="year-drop-down float-right">
-                  <select class="select-box"  id="year-filer">
-                     <%foreach from=$year  key=key item=$value %>
-                     <option value="<%$value['id'] %>"><%$value['val'] %></option>
-                     <%/foreach%> 
-                  </select>
-               </div>
-               <div class="year-drop-down unit-drop-down float-right margin-right-2 <%if $isMultipleClientUnits != "true" %>hide<%/if %>">
-                  <select class="select-box"  id="company-unit-filer">
-                     <option value="All">All</option>
-                     <%foreach from=$unit_data  key=key item=$value %>
-                     <option value="<%$value['id'] %>" <%if ($selected_unit == $value['id']) %>selected <%/if%>><%$value['val'] %></option>
-                     <%/foreach%>                    
-                  </select>
-               </div>
+               
+               
                <div class="refresh-btn-box float-right margin-right-2">
                   <button class="progress-button action-btn mr-3" data-style="fill" data-horizontal="" id="refresh-btn">
                      <span class="content">Refresh</span>
@@ -233,6 +220,25 @@
                               </a>
                            </article>
                         </div>
+                        <div class="col-md-6 col-xl-3  ">
+                           <article class="stat-cards-item widget-box" id="TOTAL_PENDING_LINKS_BLOCK" data-widget="TOTAL_PENDING_LINKS">
+                              <div class="refresh-btn-block ">
+                                 <i class="las la-sync cursor" title="Refresh"></i>
+                              </div>
+                              <div class="loader-box">
+                                 <div class="dot-elastic"></div>
+                              </div>
+                              <a href="<%base_url("/form_listing?status=PendingApproval") %>" class="redirect-dashboard">
+                                 <div class="stat-cards-icon success">
+                                    <i class="las la-history"></i>
+                                 </div>
+                                 <div class="stat-cards-info">
+                                    <p class="stat-cards-info__title"><Active></Active></p>
+                                    <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
+                                 </div>
+                              </a>
+                           </article>
+                        </div>
                         
 
                      </div>
@@ -374,7 +380,7 @@
                               </div>
                               <div class="col-md-2 mt-3 dashboard-header">
                                  <div class="refresh-btn-box float-right mt-1">
-                                    <a href="<%base_url('form_creation')%>" style="top: -2px;height: 37px; gap:7px;    padding: 0px 14px !important;   display: flex;" class="progress-button action-btn mr-3 flex" data-style="fill" data-horizontal="" id="refresh-btn">
+                                    <a href="javascript:void(0)" style="top: -2px;height: 37px; gap:7px;    padding: 0px 14px !important;   display: flex;" class="progress-button action-btn mr-3 flex addNewForm" data-style="fill" data-horizontal="" >
                                        <i class="ti ti-square-plus" style="font-size: 24px;margin-top: 7px;"></i><span class="content" style="font-size: 16px;line-height: 2.2;"> Generate Link</span>
                                     </a>
                                  </div>
@@ -504,7 +510,7 @@
                               </div>
                               <div class="col-md-2 mt-3 dashboard-header">
                                  <div class="refresh-btn-box float-right mt-1">
-                                    <a href="<%base_url('form_creation')%>" style="top: -2px;height: 37px; gap:7px;    padding: 0px 14px !important;   display: flex;" class="progress-button action-btn mr-3 flex" data-style="fill" data-horizontal="" id="refresh-btn">
+                                    <a href="javascript:void(0)" style="top: -2px;height: 37px; gap:7px;    padding: 0px 14px !important;   display: flex;" class="progress-button action-btn mr-3 flex addNewForm" data-style="fill" data-horizontal="" >
                                        <i class="ti ti-square-plus" style="font-size: 24px;margin-top: 7px;"></i><span class="content" style="font-size: 16px;line-height: 2.2;"> Generate Link</span>
                                     </a>
                                  </div>
@@ -550,7 +556,38 @@
                   </div>
                </div>
          </main>
-         </div>       
+         </div>   
+         <div class="modal fade" id="checkTypeOfForm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                     <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                              <h5 class="modal-title w-100" id="exampleModalLabel">Form Link Type</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                              
+                              </button>
+                           </div>
+                           <form action="javascript:void(0)" method="POST" enctype="multipart/form-data" id="checkTypeOfFormData" class=""> 
+                           <div class="modal-body">
+                             <div class="radio-box">
+                                <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
+                                <br>
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="form_heder_type" value="school" checked>
+                                  <label class="form-check-label" for="inlineRadio2">Student</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="radio" name="form_heder_type" value="office">
+                                  <label class="form-check-label" for="inlineRadio1">Staff</label>
+                                </div>
+                              </div>
+                           </div>
+                           <div class="modal-footer">
+                           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                           <button type="submit" class="btn btn-primary">Save</button>
+                           </form>
+                           </div>
+                        </div>
+                     </div>    
       </div>
       <!-- /.container-fluid -->
 </section>
@@ -567,6 +604,7 @@
 </style>
 
 <script>
+var base_url = <%base_url()|@json_encode%>
 $(document).on("click", ".refresh-btn-block", function () {
     var widget = $(this).closest(".widget-box");   // get the parent widget box
     widget.find(".stat-cards-info__num").removeClass("hide");  // remove hide class
