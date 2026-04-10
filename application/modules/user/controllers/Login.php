@@ -5,7 +5,7 @@ class Login extends MY_Controller {
         parent::__construct();
         $this->load->model('Login_model');
         $this->load->model('form_model');
-		// sent_link_generated("5691","8381058482");
+		// sent_link_approved_admin("5691","8381058482");
     }
 	public function index() {
 		$data['base_url'] = base_url();

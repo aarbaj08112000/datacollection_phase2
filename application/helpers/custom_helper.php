@@ -285,7 +285,7 @@ function sent_link_approved($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your link has been approved. You may now use the link. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your link has been approved. You may now use the link. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -309,7 +309,7 @@ function sent_link_approved_admin($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, the link for $user_name has been approved successfully. The link is now active for use. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, the link for $user_name has been approved successfully. The link is now active for use. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -333,7 +333,7 @@ function sent_link_generated($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your link is under approval. You will be notified once approved. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your link is under approval. You will be notified once approved. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -357,7 +357,7 @@ function sent_link_generated_admin($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, the link for $user_name is pending approval. Kindly review and approve. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, the link for $user_name is pending approval. Kindly review and approve. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -381,7 +381,7 @@ function sent_approved_account($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your account has been approved successfully. You can now log in and use the services. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your account has been approved successfully. You can now log in and use the services. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -405,7 +405,7 @@ function sent_approved_account_admin($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, the account for $user_name has been approved successfully. The user can now access the system. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, the account for $user_name has been approved successfully. The user can now access the system. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -429,7 +429,7 @@ function sent_registration_completed($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your registration has been successfully completed. Your account is under approval. You will be notified once approved. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear $user_name, your registration has been successfully completed. Your account is under approval. You will be notified once approved. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
@@ -453,7 +453,7 @@ function sent_registration_completed_admin($user_name = "",$mobile_number=""){
         $api_key = "NN3W33MCOH2YNAG3CC6J1RF5NZINU3G1";
         
       
-        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, a new registration for $user_name has been completed. The account is pending approval. Please review and approve. – BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
+        $url = "http://msg.msgclub.net/rest/services/sendSMS/sendGroupSms?AUTH_KEY=a9351d889897dee&message=" . urlencode("Dear Admin, a new registration for $user_name has been completed. The account is pending approval. Please review and approve. - BHARAT ID SOFTWARE SOLUTION") . "&senderId=BHARID&routeId=1&mobileNos=$mobile_number&smsContentType=english";
 
         $ch = curl_init();
 
