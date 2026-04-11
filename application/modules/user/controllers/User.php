@@ -317,8 +317,8 @@ class User extends MY_Controller {
 			$affected_rows = $this->User_model->insertGroupRights($group_menu_right);
 			if($affected_rows > 0){
 				$group_ids = $this->session->userdata("groups");
-				$group_ids = explode(",",$group_ids);
-				if(in_array($group_id,$group_ids)){
+				$group_ids_val = explode(",",$group_ids);
+				if(in_array($group_id,$group_ids_val)){
 					$group_rights = $this->User_model->getGroupRightData($group_ids,"");
 					$this->session->set_userdata('group_rights_arr', base64_encode(json_encode($group_rights)));
 				}
