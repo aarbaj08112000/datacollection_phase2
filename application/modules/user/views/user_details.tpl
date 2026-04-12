@@ -131,6 +131,7 @@
                                  <th>Mobile Number</th>
                                  <th>Password</th>
                                  <th>Role</th>
+                                 <th>Added date</th>
                                  <th>Status</th>
                                  <th>Action</th>
                               </tr>
@@ -150,6 +151,7 @@
                                  <td><%$u['user_mobile_number'] %></td>
                                  <td><%$u['user_password'] %></td>
                                  <td><%$u['user_role'] %></td>
+                                 <td><%getDefaultDateTime($u['added_date']) %></td>
                                  <td class="text_<%strtolower($u['status']) %>"><%$u['status'] %></td>
                                  <td>
                                     <a data-bs-toggle="modal" data-bs-target="#updatePromo<%$i%>" title="Edit"><i class="ti ti-edit"></i></a>

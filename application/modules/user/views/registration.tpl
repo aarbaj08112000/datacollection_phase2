@@ -101,7 +101,7 @@
                                        <label for="school_address"><span class="title-school">Channel Partner</span> Address </label>
                                        <div width="28%" class="bmatter relative">
                                           <textarea type="text"
-                                             title="School Address"
+                                             title="Address"
                                              name="school_address"
                                              id="school_address"
                                              class="text login-user validation-feild form-control" 

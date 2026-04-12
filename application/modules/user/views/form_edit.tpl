@@ -131,7 +131,7 @@
             <label for="url" class="form-label fs-6">URL<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="url" placeholder="Enter your website" name="url" value="<%$school_data['url']%>" readonly>
           </div>
-          <div class="col-md-4 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%>">
+          <div class="col-md-4 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%> hide">
             <div class="radio-box">
             <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
             <br>
@@ -162,18 +162,18 @@
             <input type="text" class="form-control"  placeholder="Enter designation" name="designation" value="<%$school_data['designation']%>">
           </div>
           
-          <div class="col-md-4 mt-3 course-row-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%>">
+          <div class="col-md-4 mt-3 course-row-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%> <%if $school_data['form_type'] eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class</span><span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Course predefined values are available in the dropdown. You can select multiple options if required. If you need a new course value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
-            <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select course" name="course" />
+            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class</span><span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Class predefined values are available in the dropdown. You can select multiple options if required. If you need a new class value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
+            <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select class" name="course" />
             </div>
           </div>
-          <div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%>">
+          <div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') %>hide<%/if%> <%if $school_data['form_type'] eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="Section predefined values are available in the dropdown. You can select multiple options if required. If you need a new section value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="sectionToken" type="text" class="form-control autocomplete" placeholder="Select section" name="section" />
             </div>
-          </div><div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%>">
+          </div><div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%> <%if $school_data['form_type'] neq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">House<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="If you need a house value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="houseToken" type="text" class="form-control autocomplete" placeholder="Select house" name="house" />
@@ -203,10 +203,10 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4 mt-3 <%if $school_data['form_type'] eq 'school' && ($user_role eq 'School' || $user_role eq 'ChannelPartner')%>hide<%/if%>">
+        <div class="col-md-4 mt-3 <%if $school_data['form_type'] eq 'school' && ($user_role eq 'School' || $user_role eq 'ChannelPartner')%>hide<%/if%> hide">
           <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">Comment<span class="text-danger ms-1"></span></label>
-            <textarea name="comment" class="form-control textarea1"  maxlength="1000" placeholder="Enter Address"autofocus><%$school_data['comment']%></textarea>
+            <textarea name="comment" class="form-control textarea1"  maxlength="1000" placeholder="Enter Comment"autofocus><%$school_data['comment']%></textarea>
             <div id="the-count1" style="
             float: right;
             margin-top: 7px;

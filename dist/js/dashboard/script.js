@@ -40,6 +40,7 @@ var dashbord = {
             }
         });
     })
+    
     setInterval(() => {
         window.location.reload();
     }, 300000);
@@ -55,6 +56,18 @@ var dashbord = {
         type = btoa(type);
         window.location.href = base_url+"form_creation?type="+type;
     });
+    $(document).on('click','.child-chneel-data',function() {
+        var id = $(this).attr("data-id");
+        console.log(".child-channel-box-"+id)
+        $(".child-channel-box-"+id).show();
+        $(".parent-channel-box").hide();
+    });
+    $(document).on('click','#back-to-channel',function() {
+        $(".child-channel-box").hide();
+        $(".parent-channel-box").show();
+    });
+
+    
   },
   initiatePluggin: function(){
     let that = this;

@@ -176,7 +176,7 @@
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info">
-                                    <p class="stat-cards-info__title">Yesterday’s Generated Link</p>
+                                    <p class="stat-cards-info__title">Total Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number " data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -190,12 +190,12 @@
                               <div class="loader-box hide">
                                  <div class="dot-elastic"></div>
                               </div>
-                              <a href="<%base_url("/form_listing") %>" class="redirect-dashboard">
+                              <a href="<%base_url("/form_listing?status=Active") %>" class="redirect-dashboard">
                                  <div class="stat-cards-icon primary">
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info" >
-                                    <p class="stat-cards-info__title" >Current Month Generated Link</p>
+                                    <p class="stat-cards-info__title" >Total Active Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -209,12 +209,12 @@
                               <div class="loader-box hide">
                                  <div class="dot-elastic"></div>
                               </div>
-                              <a href="<%base_url("/form_listing") %>" class="redirect-dashboard">
+                              <a href="<%base_url("/form_listing?status=Inactive") %>" class="redirect-dashboard">
                                  <div class="stat-cards-icon primary">
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info" >
-                                    <p class="stat-cards-info__title" >Current Year Generated Link</p>
+                                    <p class="stat-cards-info__title" >Total Reject Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -233,7 +233,7 @@
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info">
-                                    <p class="stat-cards-info__title"><Active></Active></p>
+                                    <p class="stat-cards-info__title">Pending Approvel Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -328,7 +328,7 @@
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info">
-                                    <p class="stat-cards-info__title">Yesterday’s Generated Link</p>
+                                    <p class="stat-cards-info__title">Total Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number " data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -342,12 +342,12 @@
                               <div class="loader-box hide">
                                  <div class="dot-elastic"></div>
                               </div>
-                              <a href="<%base_url("/form_listing") %>" class="redirect-dashboard">
+                              <a href="<%base_url("/form_listing?status=Active") %>" class="redirect-dashboard">
                                  <div class="stat-cards-icon primary">
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info" >
-                                    <p class="stat-cards-info__title" >Current Month Generated Link</p>
+                                    <p class="stat-cards-info__title" >Total Active Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -361,12 +361,12 @@
                               <div class="loader-box hide">
                                  <div class="dot-elastic"></div>
                               </div>
-                              <a href="<%base_url("/form_listing") %>" class="redirect-dashboard">
+                              <a href="<%base_url("/form_listing?status=PendingApproval") %>" class="redirect-dashboard">
                                  <div class="stat-cards-icon primary">
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info" >
-                                    <p class="stat-cards-info__title" >Current Year Generated Link</p>
+                                    <p class="stat-cards-info__title" >Total Pending Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -391,20 +391,21 @@
                            </div>
                            
                         </div>
+                        <div class="row parent-channel-box">
                         <%assign var="borderColors" value=["red", "blue", "green", "orange"] %>
-                        <%foreach from=$channelPatnerData item=college name=loop %>
+                        <%foreach from=$channelPatnerRecord item=college name=loop %>
                            <%assign var="borderColor" value=$borderColors[$smarty.foreach.loop.index % count($borderColors)] %>
                            <div class="col-md-3 mt-3 channel-patner-box">
-                           <a href="<%$base_url %>data_collection_list/<%$college.school_id %>">
+                           <a href="javascript:void(0)" data-id="<%$college.channel_patner_id%>" class="child-chneel-data">
                               <div class="card p-3 pb-2" style="border-bottom: 3px solid <%$borderColor %>; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                                     <div class="d-flex align-items-center">
                                        <!-- College Logo (Left Side) -->
-                                       <img src="<%$base_url %><%$college.image %>" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+                                       <img src="<%$base_url %><%$college.channel_patner_logo %>" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
 
                                        <!-- College Name (Right Side) -->
                                        <div class="mt-3">
-                                       <h5 class="mb-0 school-title" style="flex-grow: 1;"><%$college.name %></h5>
-                                       <h6 class="mb-0 channel-title"><%$college.channel_patner_name %></h6>
+                                       <h5 class="mb-0 school-title" style="flex-grow: 1;"><%$college.channel_patner_name %></h5>
+                                       <h6 class="mb-0 channel-title"><%$college.contact_person %></h6>
                                        </div>
                                     </div>
                                     <p style="display: flex; justify-content: space-between; margin-top: 15px;margin-bottom: 0px;">
@@ -420,6 +421,45 @@
                            </div>
                            
                         <%/foreach %>
+                        </div>
+                        <div class="col-md-12 mt-3 1">
+                        <%foreach from=$channelPatnerData item=channelPatnerDetails name=loop %>
+                            <div class="row child-channel-box child-channel-box-<%$channelPatnerDetails[0].channel_patner_id%>" style="display: none;">
+                            <div class="col-12">
+                           <button class="btn btn-seconday" style="    float: inline-end;" type="button" title="Back To Channel Patner Data" id="back-to-channel" ><i class="ti ti-arrow-left"></i></button>
+                        </div>
+                           <%foreach from=$channelPatnerDetails item=college name=loop1 %>
+                              <%assign var="borderColor" value=$borderColors[$smarty.foreach.loop.index % count($borderColors)] %>
+                              <div class="col-md-3 mt-3 channel-patner-box">
+                              <a href="<%$base_url %>data_collection_list/<%$college.school_id %>">
+                                 <div class="card p-3 pb-2" style="border-bottom: 3px solid <%$borderColor %>; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                       <div class="d-flex align-items-center">
+                                          <!-- College Logo (Left Side) -->
+                                          <img src="<%$base_url %><%$college.image %>" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+
+                                          <!-- College Name (Right Side) -->
+                                          <div class="mt-3">
+                                          <h5 class="mb-0 school-title" style="flex-grow: 1;"><%$college.name %></h5>
+                                          <h6 class="mb-0 channel-title"><%$college.channel_patner_name %></h6>
+                                          </div>
+                                       </div>
+                                       <p style="display: flex; justify-content: space-between; margin-top: 15px;margin-bottom: 0px;">
+                                          <span>Total Reponse:</span> 
+                                          <span style="font-weight: bold; font-size: 20px; color: <%$borderColor %>;"><%$college.total_record %></span>
+                                       </p>
+                                       <p style="display: flex; justify-content: space-between; margin-top: 0px;margin-bottom: 0px;">
+                                          <span>Today Reponse:</span> 
+                                          <span style="font-weight: bold; font-size: 20px; color: <%$borderColor %>;"><%$college.today_response %></span>
+                                       </p>
+                                 </div>
+                                 </a>
+                              </div>
+                              
+                           <%/foreach %>
+                           </div>
+                        <%/foreach %>
+                        
+                        </div>
                      </div>
                   </div>
                   <%/if%>
@@ -458,7 +498,7 @@
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info">
-                                    <p class="stat-cards-info__title">Yesterday’s Generated Link</p>
+                                    <p class="stat-cards-info__title">Total Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number " data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -472,12 +512,12 @@
                               <div class="loader-box hide">
                                  <div class="dot-elastic"></div>
                               </div>
-                              <a href="<%base_url("/form_listing") %>" class="redirect-dashboard">
+                              <a href="<%base_url("/form_listing?status=Active") %>" class="redirect-dashboard">
                                  <div class="stat-cards-icon primary">
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info" >
-                                    <p class="stat-cards-info__title" >Current Month Generated Link</p>
+                                    <p class="stat-cards-info__title" >Total Active Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -491,12 +531,12 @@
                               <div class="loader-box hide">
                                  <div class="dot-elastic"></div>
                               </div>
-                              <a href="<%base_url("/form_listing") %>" class="redirect-dashboard">
+                              <a href="<%base_url("/form_listing?status=PendingApproval") %>" class="redirect-dashboard">
                                  <div class="stat-cards-icon primary">
                                     <i class="las la-history"></i>
                                  </div>
                                  <div class="stat-cards-info" >
-                                    <p class="stat-cards-info__title" >Current Year Generated Link</p>
+                                    <p class="stat-cards-info__title" >Total Pening Generated Link</p>
                                     <p class="stat-cards-info__num timer count-title count-number" data-to="" data-speed="1500"></p>
                                  </div>
                               </a>
@@ -583,7 +623,7 @@
                            </div>
                            <div class="modal-footer">
                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                           <button type="submit" class="btn btn-primary">Save</button>
+                           <button type="submit" class="btn btn-primary">Ok</button>
                            </form>
                            </div>
                         </div>

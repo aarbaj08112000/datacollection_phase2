@@ -199,10 +199,10 @@
               </div>
             </div>
           </div>
-          <div class="col-md-4 mt-3 <%if $form_type eq 'school'%>hide<%/if%>">
+          <div class="col-md-4 mt-3 <%if $form_type eq 'school'%>hide<%/if%> hide">
           <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">Comment<span class="text-danger ms-1"></span></label>
-            <textarea name="comment" class="form-control textarea1"  maxlength="1000" placeholder="Enter Address"autofocus><%$school_data['comment']%></textarea>
+            <textarea name="comment" class="form-control textarea1"  maxlength="1000" placeholder="Enter Comment"autofocus><%$school_data['comment']%></textarea>
             <div id="the-count1" style="
             float: right;
             margin-top: 7px;
@@ -214,8 +214,8 @@
         </div>
           <div class="col-md-4 mt-3 course-row-box <%if $form_type eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class</span><span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Course predefined values are available in the dropdown. You can select multiple options if required. If you need a new course value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
-            <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select course" name="course" />
+            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class</span><span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Class predefined values are available in the dropdown. You can select multiple options if required. If you need a new class value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
+            <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select class" name="course" />
             </div>
           </div>
           <div class="col-md-4 mt-3 section-box <%if $form_type eq 'office'%>hide<%/if%>">
@@ -289,6 +289,10 @@
                         <div class="text-center">
                             <img src="<%$payment_qr%>"  style="width: 406px;"/>
                         </div>
+                        <div class="form-group col-12 mt-2">
+                           <h5><b>Note :</b>  An initial payment of ₹500 is required as a maintenance and security deposit to begin the work. This amount will be fully adjusted against your final billing.</h5> 
+                        </div>
+                        
                      </div>
                   </div>
                   <div class="modal-footer">

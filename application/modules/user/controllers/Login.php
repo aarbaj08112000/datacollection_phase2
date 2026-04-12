@@ -208,7 +208,7 @@ class Login extends MY_Controller {
 				'otp' => $otp
 			);
 			$update_result = $this->Login_model->updateUserData($update_data, $result['id']);
-			$role_arr = ['Admin','ChannelPartner','SuperAdmin'];
+			$role_arr = ['Admin','ChannelPartner','SuperAdmin',"School"];
 			if(in_array($result['user_role'],$role_arr)){
 				$email = $result['user_email'];
 				$user_mobile_number = $result['user_mobile_number'];

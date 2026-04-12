@@ -634,10 +634,10 @@ class Form extends MY_Controller {
                     }
                     $row_value[$val['data']] .= '<a class="me-2 preview-id" href="javascript:void(0)" data-href="'.base_url('preview_id_card/').$value['school_master_id']."/".$value['form_data_collection_id'].'"><i class="ti ti-eye" title="Preview Id"></i>';
                         if(in_array($role,['Employee','ChannelPartner',"SuperAdmin","Admin"])){
-                        $row_value[$val['data']] .= '<a class="me-2 edit-from-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i class="ti ti-edit" title="Edit"></i>';
+                        $row_value[$val['data']] .= '<a class="me-2 edit-from-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i class="ti ti-edit" title="Edit Data"></i>';
                     }
                     }else{
-                         $row_value[$val['data']] .= '<a  class="me-2 edit-image-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i '.$extra_style.' class="ti ti-photo-up" title="Edit"></i>';
+                         $row_value[$val['data']] .= '<a  class="me-2 edit-image-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i '.$extra_style.' class="ti ti-photo-up" title="Edit Data"></i>';
                     }
                 }
                 $row_value['added_date'] = getDefaultDateTime($value['added_date']);
@@ -688,8 +688,13 @@ class Form extends MY_Controller {
             mkdir($temp_dir, 0755, TRUE);
         }
 
+        $url = $form_data['url'];
+
+        $form_data['url'] = preg_replace('/_\d{4}_\d{2}_\d{2}_\d{2}_[AP]M$/', '', $url);
+
+
         // Define the ZIP file name
-        $zipFile = $temp_dir . "images_".$form_data['url'].date("_d-m-Y_H-i").".zip";
+        $zipFile = $temp_dir . "images_".$form_data['url'].date("_d_m_Y_H_i_s").".zip";
         error_log("ZIP path: " . $zipFile);
 
         // Create a new ZIP archive
@@ -766,9 +771,13 @@ class Form extends MY_Controller {
         if (!is_dir($temp_dir)) {
             mkdir($temp_dir, 0755, TRUE);
         }
+        $url = $form_data['url'];
+
+        $form_data['url'] = preg_replace('/_\d{4}_\d{2}_\d{2}_\d{2}_[AP]M$/', '', $url);
+
 
         // Define the ZIP file name
-        $zipFile = $temp_dir . "all_images".$form_data['url'].date("_d-m-Y_H-i").".zip";
+        $zipFile = $temp_dir . "all_images".$form_data['url'].date("_d_m_Y_H_i_s").".zip";
 
         // Create a new ZIP archive
         $zip = new ZipArchive();
@@ -1040,10 +1049,15 @@ class Form extends MY_Controller {
         if (file_exists($template_old)) {
             unlink($template_old);
         }
+        $form_edit_val = $this->Form_model->getSchoolFormWithAddedBy($post_data['school_id']);
+        $_POST['name'] = $_POST['school_name'];
         $form_type = $this->input->post('form_heder_type');
         $school_data = $this->session->userdata("extra_json");
         $user_role = $this->session->userdata("role");
         $url = $post_data['url'];
+        $user_role = $form_edit_val['user_role'];
+        $school_data = $user_role == "School" || $user_role == "ChannelPartner" ?  (array) json_decode($form_edit_val['extra_json']) : [];
+       
         if($user_role == "ChannelPartner"){
             $name = $school_data['school_name'];
             $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
@@ -1064,7 +1078,7 @@ class Form extends MY_Controller {
             // $post_data['channel_patner_id'] = $this->session->userdata('user_id');
             
         }else{
-            $form_heder_type = $form_heder_type == "office" ? "STAFF" : "STUDENT";
+            $form_heder_type = $form_type == "office" ? "STAFF" : "STUDENT";
             $school_name_val = $this->input->post('name');
             $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
             $school_name = preg_replace('/\s+/', '_', $school_name);
@@ -1077,6 +1091,7 @@ class Form extends MY_Controller {
                 "channelPartner" => $school_data['school_name']
             ];
         }
+       
 
         if($user_role == "School"){
             $post_data['channel_patner_id'] = $this->session->userdata('user_id');
@@ -1195,12 +1210,13 @@ class Form extends MY_Controller {
                 "section" => $post_data['section'],
                 "house" => $post_data['house'],
                 'from_field' => json_encode($form_field_data, TRUE),
-                'added_date' => date("Y-m-d H:i:s"),
-                'added_by' => $this->session->userdata('user_id'),
+                'updated_date' => date("Y-m-d H:i:s"),
+                'updated_by' => $this->session->userdata('user_id'),
                 'channel_patner_id' => $post_data['channel_patner_id'],
                 'address' => $post_data['address'],
                 'comment' => $post_data['comment']
             );
+           
             $affected_row = $this -> Form_model -> updateSchoolData(
                 $data,
                 $post_data['school_id']
@@ -1255,6 +1271,7 @@ class Form extends MY_Controller {
         if (!is_dir($folderPath) && $folderPath != "") {
             mkdir($folderPath, 0777, true);
         }
+       
         $upload_error_msg = [];
         foreach ($_FILES as $key => $value) {
 
@@ -1265,7 +1282,7 @@ class Form extends MY_Controller {
             $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
 
             $folderPath .= "/".$key;
-
+            
             if (!is_dir($folderPath) && $folderPath != "") {
                 mkdir($folderPath, 0777, true);
             }
@@ -1360,6 +1377,8 @@ class Form extends MY_Controller {
                 }
             }
         }
+
+        // pr($image_arr,1);
         
         // foreach ($_FILES as $key => $value) {
         //     // Get the uploaded image
@@ -1538,30 +1557,30 @@ class Form extends MY_Controller {
             "width" => "5%",
             "className" => "status dt-center",
         ];
-         $column[] = [
-            "data" => "added_by",
-            "title" => "Added By",
-            "width" => "8%",
-            "className" => "status dt-center",
-        ];
-         $column[] = [
-            "data" => "added_date",
-            "title" => "Added Date",
-            "width" => "8%",
-            "className" => "status dt-center",
-        ];
-         $column[] = [
-            "data" => "updated_by",
-            "title" => "Updated By",
-            "width" => "8%",
-            "className" => "status dt-center",
-        ];
-         $column[] = [
-            "data" => "updated_date",
-            "title" => "Updated Date",
-            "width" => "8%",
-            "className" => "status dt-center",
-        ];
+        // $column[] = [
+        //     "data" => "added_by",
+        //     "title" => "Added By",
+        //     "width" => "8%",
+        //     "className" => "status dt-center",
+        // ];
+        //  $column[] = [
+        //     "data" => "added_date",
+        //     "title" => "Added Date",
+        //     "width" => "8%",
+        //     "className" => "status dt-center",
+        // ];
+        //  $column[] = [
+        //     "data" => "updated_by",
+        //     "title" => "Updated By",
+        //     "width" => "8%",
+        //     "className" => "status dt-center",
+        // ];
+        //  $column[] = [
+        //     "data" => "updated_date",
+        //     "title" => "Updated Date",
+        //     "width" => "8%",
+        //     "className" => "status dt-center",
+        // ];
         $column[] = [
             "data" => "action",
             "title" => "Action",

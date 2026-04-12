@@ -24,7 +24,7 @@ class Login_model extends CI_Model {
 		$this->db->from('userinfo u');
 		$this->db->where('u.user_email', $email);
 		if($mobile_number != ""){
-			$this->db->where('u.user_mobile_number', $email);
+			$this->db->or_where('u.user_mobile_number', $email);
 		}
 		$query = $this->db->get();
 		$data = is_object($query) ? $query->row_array() : [];

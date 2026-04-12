@@ -479,6 +479,16 @@ class Form_model extends CI_Model {
 		$data = is_object($query) ? $query->row_array() : [];
         return $data;
 	}
+    public function getSchoolFormWithAddedBy($school_id = 0){
+        
+        $this->db->select('fdc.*,ua.user_role,ua.extra_json');
+        $this->db->from('school_matser as fdc');
+         $this->db->join('userinfo as ua','ua.id = fdc.added_by','left');
+        $this->db->where("fdc.school_id",$school_id);
+        $result_obj = $this->db->get();
+        $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
+        return $ret_data;
+    }
 
     
     

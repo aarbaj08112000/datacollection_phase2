@@ -81,13 +81,33 @@ class Dashboard extends MY_Controller
 		foreach ($colleges as $key => $value) {
 			$colleges[$key]['today_response'] = isset($today_count[$value['school_id']]) && $today_count[$value['school_id']] > 0 ? $today_count[$value['school_id']] : 0;
 			if($value['channel_patner_id'] > 0 ){
-				$channelPatnerData[] = $colleges[$key];
+                $chaneel_patner_details = $colleges[$key];
+                $chaneel_patner = (array) json_decode($chaneel_patner_details['extra_json']); 
+                $chaneel_patner_details['channel_patner_name'] = $chaneel_patner['school_name'];
+                $chaneel_patner_details['channel_patner_logo'] = $chaneel_patner['school_logo'];
+				$channelPatnerData[$value['channel_patner_id']][] = $chaneel_patner_details;
 			}
 			if($value['user_role'] == "School" ){
 				$schoolData[] = $colleges[$key];
 			}
 			
 		}
+        $channelPatnerDataVal = $channelPatnerData;
+        $channelPatnerDataArr = [];
+        foreach ($channelPatnerDataVal as $key => $value) {
+            
+            $total_record = $total = array_sum(array_column($value, 'total_record'));
+            $today_response = $total = array_sum(array_column($value, 'today_response'));
+            // pr($value);
+            $channelPatnerDataArr[] = [
+                "channel_patner_id" => $value[0]['channel_patner_id'],
+                "channel_patner_name" => $value[0]['channel_patner_name'],
+                "channel_patner_logo" => $value[0]['channel_patner_logo'],
+                "contact_person" => $value[0]['contact_person'],
+                "total_record" => $total_record,
+                "today_response" => $today_response,
+            ];
+        }
 		$selected_menu = "";
         // pr(checkGroupAccess("overall_detail_tab","list",false),1);
 		if(checkGroupAccess("overall_detail_tab","list",false)){
@@ -101,8 +121,9 @@ class Dashboard extends MY_Controller
 		// pr($selected_menu,1);
 		$data['colleges'] = $colleges;
 		$data['channelPatnerData'] = $channelPatnerData;
+        $data['channelPatnerRecord'] = $channelPatnerDataArr;
 		$data['schoolData'] = $schoolData;
-		// pr($schoolData,1);
+		// pr($channelPatnerRecord,1);
 		
 		$this->smarty->loadView('dashboard.tpl',$data,'Yes','Yes');
 	}

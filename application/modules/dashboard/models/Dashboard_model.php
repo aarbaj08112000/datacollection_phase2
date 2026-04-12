@@ -9,7 +9,7 @@ class Dashboard_model extends CI_Model
     }
 	public function get_school_data($date = ""){
         
-        $this->db->select('sm.*,COUNT(fdc.school_master_id) as total_record,u.user_name as channel_patner_name,ua.user_role');
+        $this->db->select('sm.*,COUNT(fdc.school_master_id) as total_record,u.user_name as channel_patner_name,ua.user_role,u.extra_json');
         $this->db->from('school_matser sm');
         $this->db->join('form_data_collection as fdc','fdc.school_master_id = sm.school_id','left');
         $this->db->join('userinfo as u','u.id = sm.channel_patner_id','left');
@@ -113,7 +113,7 @@ class Dashboard_model extends CI_Model
 	{
 	    $this->db->select('COUNT(u.school_id) as total_user');
 	    $this->db->from('school_matser as u');
-		$this->db->where('DATE(u.added_date)', date('Y-m-d', strtotime('-1 day')));
+		// $this->db->where('DATE(u.added_date)', date('Y-m-d', strtotime('-1 day')));
 	    $result_obj = $this->db->get();
 	    $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
 	    return $ret_data;
@@ -123,8 +123,9 @@ class Dashboard_model extends CI_Model
 	{
 	    $this->db->select('COUNT(u.school_id) as total_user');
 	    $this->db->from('school_matser as u');
-		$this->db->where('u.added_date >=', date('Y-m-01'));
-		$this->db->where('u.added_date <', date('Y-m-01', strtotime('+1 month')));
+		$this->db->where('u.status', "Active");
+		// $this->db->where('u.added_date >=', date('Y-m-01'));
+		// $this->db->where('u.added_date <', date('Y-m-01', strtotime('+1 month')));
 	    $result_obj = $this->db->get();
 	    $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
 	    return $ret_data;
@@ -134,8 +135,9 @@ class Dashboard_model extends CI_Model
 	{
 	    $this->db->select('COUNT(u.school_id) as total_user');
 	    $this->db->from('school_matser as u');
-		$this->db->where('u.added_date >=', date('Y-01-01'));
-		$this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+		// $this->db->where('u.added_date >=', date('Y-01-01'));
+		// $this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+		$this->db->where('u.status', "Inactive");
 	    $result_obj = $this->db->get();
 	    $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];
 	    return $ret_data;
@@ -161,7 +163,7 @@ class Dashboard_model extends CI_Model
 	    $this->db->select('COUNT(u.school_id) as total_user');
 	    $this->db->from('school_matser as u');
 		$this->db->where("u.channel_patner_id > ",0);
-		$this->db->where('DATE(u.added_date)', date('Y-m-d', strtotime('-1 day')));
+		// $this->db->where('DATE(u.added_date)', date('Y-m-d', strtotime('-1 day')));
 		if($this->user_role == "ChannelPartner"){
 			$this->db->where("u.channel_patner_id",$this->user_id);
 		}
@@ -175,8 +177,9 @@ class Dashboard_model extends CI_Model
 	    $this->db->select('COUNT(u.school_id) as total_user');
 	    $this->db->from('school_matser as u');
 		$this->db->where("u.channel_patner_id > ",0);
-		$this->db->where('u.added_date >=', date('Y-m-01'));
-		$this->db->where('u.added_date <', date('Y-m-01', strtotime('+1 month')));
+		$this->db->where('u.status', "Active");
+		// $this->db->where('u.added_date >=', date('Y-m-01'));
+		// $this->db->where('u.added_date <', date('Y-m-01', strtotime('+1 month')));
 		if($this->user_role == "ChannelPartner"){
 			$this->db->where("u.channel_patner_id",$this->user_id);
 		}
@@ -190,8 +193,9 @@ class Dashboard_model extends CI_Model
 	    $this->db->select('COUNT(u.school_id) as total_user');
 	    $this->db->from('school_matser as u');
 		$this->db->where("u.channel_patner_id > ",0);
-		$this->db->where('u.added_date >=', date('Y-01-01'));
-		$this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+		// $this->db->where('u.added_date >=', date('Y-01-01'));
+		// $this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+		$this->db->where('u.status', "PendingApproval");
 		if($this->user_role == "ChannelPartner"){
 			$this->db->where("u.channel_patner_id",$this->user_id);
 		}
@@ -220,7 +224,7 @@ class Dashboard_model extends CI_Model
 	    $this->db->from('school_matser as u');
 		$this->db->join('userinfo as ua','ua.id = u.added_by AND ua.user_role = "School"');
 		$this->db->where("u.channel_patner_id > ",0);
-		$this->db->where('DATE(u.added_date)', date('Y-m-d', strtotime('-1 day')));
+		// $this->db->where('DATE(u.added_date)', date('Y-m-d', strtotime('-1 day')));
 		if($this->user_role == "School"){
 			$this->db->where("u.added_by",$this->user_id);
 		}
@@ -235,8 +239,9 @@ class Dashboard_model extends CI_Model
 	    $this->db->from('school_matser as u');
 		$this->db->join('userinfo as ua','ua.id = u.added_by AND ua.user_role = "School"');
 		$this->db->where("u.channel_patner_id > ",0);
-		$this->db->where('u.added_date >=', date('Y-m-01'));
-		$this->db->where('u.added_date <', date('Y-m-01', strtotime('+1 month')));
+		$this->db->where('u.status', "Active");
+		// $this->db->where('u.added_date >=', date('Y-m-01'));
+		// $this->db->where('u.added_date <', date('Y-m-01', strtotime('+1 month')));
 		if($this->user_role == "School"){
 			$this->db->where("u.added_by",$this->user_id);
 		}
@@ -251,8 +256,9 @@ class Dashboard_model extends CI_Model
 	    $this->db->from('school_matser as u');
 		$this->db->join('userinfo as ua','ua.id = u.added_by AND ua.user_role = "School"');
 		$this->db->where("u.channel_patner_id > ",0);
-		$this->db->where('u.added_date >=', date('Y-01-01'));
-		$this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+		// $this->db->where('u.added_date >=', date('Y-01-01'));
+		// $this->db->where('u.added_date <', date('Y-01-01', strtotime('+1 year')));
+		$this->db->where('u.status', "PendingApproval");
 		if($this->user_role == "School"){
 			$this->db->where("u.added_by",$this->user_id);
 		}
