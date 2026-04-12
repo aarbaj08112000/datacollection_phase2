@@ -44,7 +44,7 @@
          <a class="nav-link" href="<%$base_url%>user_list">User</a>
       </li> 
       <li>
-         <a href="<%$base_url%>field_selection_list" class="dropdown-item">Group Field Configuration</a>
+         <a href="<%$base_url%>field_selection_list" class="dropdown-item mt-2">Group Field Configuration</a>
       </li>
       <%/if%>
       <%*<%if checkGroupAccess("form_listing","list","No") || checkGroupAccess("form_field_listing","list","No") %>
