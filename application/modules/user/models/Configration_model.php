@@ -194,7 +194,11 @@ class Configration_model extends CI_Model {
             $this->db->or_like('gm.group_code', $search_params["value"]);
             $this->db->group_end();
         }
-        
+        $user_role = $this->session->userdata("role");
+        if($user_role == 'Admin'){
+            $this->db->where('gm.group_code', "School");
+            $this->db->or_where('gm.group_code', "ChannelPartner");
+        }
         // Ordering
         if (isset($condition_arr["order_by"]) && $condition_arr["order_by"] != '') {
             $this->db->order_by($condition_arr["order_by"]);
@@ -226,6 +230,11 @@ class Configration_model extends CI_Model {
             $this->db->like('gm.group_name', $search_params["value"]);
             $this->db->or_like('gm.group_code', $search_params["value"]);
             $this->db->group_end();
+        }
+        $user_role = $this->session->userdata("role");
+        if($user_role == 'Admin'){
+            $this->db->where('gm.group_code', "School");
+            $this->db->or_where('gm.group_code', "Channel Partner");
         }
         
         $result_obj = $this->db->get();
