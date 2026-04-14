@@ -86,7 +86,7 @@
                                              type="password"
                                              title="Password"
                                              name="password"
-                                         x    id="password"
+                                             id="password"
                                              size="25"
                                              value=""
                                              placeholder="Password"

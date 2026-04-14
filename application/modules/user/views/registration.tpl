@@ -80,12 +80,12 @@
                                           
                                           <input
                                              type="text"
-                                             title="School Name"
+                                             title="Name"
                                              name="school_name"
                                              id="school_name"
                                              class="text login-user validation-feild"
                                              value=""
-                                             placeholder="School Name"
+                                             placeholder="Name"
                                              />
                                        </div>
                                        <div class="clear"></div>
@@ -106,7 +106,7 @@
                                              id="school_address"
                                              class="text login-user validation-feild form-control" 
                                              value=""
-                                             placeholder="School Address"></textarea>
+                                             placeholder="Address"></textarea>
                                           
                                        </div>
                                        <div class="clear"></div>
@@ -117,12 +117,12 @@
                                           
                                           <input
                                              type="text"
-                                             title="School Contact No."
+                                             title="Contact No."
                                              name="school_contact_no"
                                              id="school_contact_no"
                                              class="text login-user validation-feild"
                                              value=""
-                                             placeholder="School Contact No."
+                                             placeholder="Contact No."
                                              />
                                        </div>
                                        <div class="clear"></div>
@@ -134,12 +134,12 @@
                                           
                                           <input
                                              type="text"
-                                             title="School Mail ID"
+                                             title="Mail ID"
                                              name="school_email"
                                              id="school_email"
                                              class="text login-user validation-feild"
                                              value=""
-                                             placeholder="School Mail ID"
+                                             placeholder="Mail ID"
                                              />
                                        </div>
                                        <div class="clear"></div>
@@ -212,7 +212,7 @@
                                        <div class="error-msg login-error-msg" id="emailErr"></div>
                                        <label for="passwd">Password </label>
                                        <div class="bmatter relative">
-                                          
+                                          <a id="pwd_show_hide" class="login-pwd-icon" href="javascript://"><i style="    top: 39px !important;" class="ti ti-lock" data-status="show"></i></a>
                                           <input
                                              type="password"
                                              title="Password"
