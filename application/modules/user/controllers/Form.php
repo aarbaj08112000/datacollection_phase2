@@ -21,7 +21,7 @@ class Form extends MY_Controller {
         $data['form_type'] = in_array($form_type,["school","office"]) ? $form_type : "school";
         $data['user_role'] = $user_role = $this->session->userdata("role");
         $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
-        $allowFileds = isset($allowFieldData['selected_fields']) && count($allowFieldData['selected_fields']) ? json_decode($allowFieldData['selected_fields']) : [];
+        $allowFileds = $allowFieldData['selected_fields'] != "" && $allowFieldData['selected_fields'] != null ? json_decode($allowFieldData['selected_fields']) : [];
         if($user_role == "ChannelPartner"){
             $data['user_id'] = $this->session->userdata("user_id");
         }
@@ -58,7 +58,7 @@ class Form extends MY_Controller {
         }
         $user_role = $this->session->userdata("role");
         $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
-        $allowFileds = isset($allowFieldData['selected_fields']) && count($allowFieldData['selected_fields']) ? json_decode($allowFieldData['selected_fields']) : [];
+        $allowFileds = $allowFieldData['selected_fields'] != "" && $allowFieldData['selected_fields'] != null ? json_decode($allowFieldData['selected_fields']) : [];
        
         $data['form_selected_feild'] =$field_data= $form_selected_feild_arr;
         $data['field_data'] =  $this->Form_model->getFieldData($allowFileds);
