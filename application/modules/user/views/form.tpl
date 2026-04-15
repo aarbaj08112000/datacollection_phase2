@@ -107,7 +107,7 @@
             <em >College/School Master</em></a>
           </h1>
           <br>
-          <span >Add Information</span>
+          <span >Add Information (<%if $form_type eq 'school'%>School<%else if $form_type eq 'office'%>Staff<%/if%>)</span>
         </div>
       </nav>
 <div class="dt-top-btn d-grid gap-2 d-md-flex justify-content-md-end mb-5">
@@ -152,7 +152,7 @@
             <label for="url" class="form-label fs-6">URL<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control" id="url" placeholder="Enter your website" name="url" value="<%$url%>">
           </div>
-          <div class="col-md-4 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%>">
+          <div class="col-md-4 <%if $user_role eq 'ChannelPartner' || $user_role eq 'School'%>hide<%/if%> hide">
             <div class="radio-box">
             <label for="url" class="form-label fs-6">Type<span class="text-danger ms-1">*</span></label>
             <br>
@@ -170,7 +170,7 @@
             </div>
             </div>
           </div>
-          <div class="col-md-4 <%if $user_role neq 'ChannelPartner' && $user_role neq 'School'%>mt-3<%/if%>  <%if $user_role eq 'School'%>hide<%/if%> ">
+          <div class="col-md-4 <%if $user_role neq 'ChannelPartner' && $user_role neq 'School'%>mt-0<%/if%>  <%if $user_role eq 'School'%>hide<%/if%> ">
             <label for="url" class="form-label fs-6">Contact Person<span class="text-danger ms-1">*</span></label>
             <input type="text" class="form-control"  placeholder="Enter contact person" name="contact_person" value="<%$contact_person%>">
           </div>

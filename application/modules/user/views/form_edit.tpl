@@ -98,7 +98,7 @@
             <em >College/School Master</em></a>
           </h1>
           <br>
-          <span >Edit Information</span>
+          <span >Edit Information (<%if $school_data['form_type'] eq 'school'%>School<%else if $school_data['form_type'] eq 'office'%>Staff<%else if $school_data['form_type'] eq 'collage'%>Collage<%/if%>)</span>
         </div>
       </nav>
 <div class="dt-top-btn d-grid gap-2 d-md-flex justify-content-md-end mb-5">

@@ -20,8 +20,11 @@ class Form extends MY_Controller {
         $form_type = isset($get_data['type']) && $get_data['type'] != "" ? base64_decode($get_data['type']) : "";
         $data['form_type'] = in_array($form_type,["school","office"]) ? $form_type : "school";
         $data['user_role'] = $user_role = $this->session->userdata("role");
-        $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
+        $user_type = $form_type == "school" ? "School" : "ChannelPartner";
+        $allowFieldData = $this->Form_model->getGroupdFieldData($user_type);
+        
         $allowFileds = $allowFieldData['selected_fields'] != "" && $allowFieldData['selected_fields'] != null ? json_decode($allowFieldData['selected_fields']) : [];
+        // pr($allowFileds,1);
         if($user_role == "ChannelPartner"){
             $data['user_id'] = $this->session->userdata("user_id");
         }
@@ -57,7 +60,8 @@ class Form extends MY_Controller {
             $form_selected_feild_arr[$feild['form_field_master_id']] = $value['required'];
         }
         $user_role = $this->session->userdata("role");
-        $allowFieldData = $this->Form_model->getGroupdFieldData($user_role);
+        $user_type = $data['school_data']['form_type'] == "school" ? "School" : "ChannelPartner";
+        $allowFieldData = $this->Form_model->getGroupdFieldData($user_type);
         $allowFileds = $allowFieldData['selected_fields'] != "" && $allowFieldData['selected_fields'] != null ? json_decode($allowFieldData['selected_fields']) : [];
        
         $data['form_selected_feild'] =$field_data= $form_selected_feild_arr;

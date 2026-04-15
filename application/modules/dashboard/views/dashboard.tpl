@@ -250,7 +250,7 @@
                               </div>
                               <div class="col-md-2 mt-3 dashboard-header">
                                  <div class="refresh-btn-box float-right mt-1">
-                                    <a href="<%base_url('form_creation')%>" style="top: -2px;height: 37px; gap:7px;    padding: 0px 14px !important;   display: flex;" class="progress-button action-btn mr-3 flex" data-style="fill" data-horizontal="" id="refresh-btn">
+                                    <a href="javascript:void(0)" style="top: -2px;height: 37px; gap:7px;    padding: 0px 14px !important;   display: flex;" class="progress-button action-btn mr-3 flex addNewForm" data-style="fill" data-horizontal="" id="refresh-btn">
                                        <i class="ti ti-square-plus" style="font-size: 24px;margin-top: 7px;"></i><span class="content" style="font-size: 16px;line-height: 2.2;"> Generate Link</span>
                                     </a>
                                  </div>

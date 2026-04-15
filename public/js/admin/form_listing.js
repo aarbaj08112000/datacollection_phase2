@@ -193,7 +193,7 @@ const page = {
         
       });
       $(document).on('click','#addNewForm',function() {
-        if(role == "ChannelPartner" || role == "School"){
+        if(role == "ChannelPartner" || role == "School" || true){
           $("#checkTypeOfForm").modal("show")
         }else{
           window.location.href = base_url+"form_creation";

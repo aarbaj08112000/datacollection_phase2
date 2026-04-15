@@ -9,7 +9,7 @@ class Form_model extends CI_Model {
     public function getFieldData($allowFileds = []){
         $this->db->select('f.*');
         $this->db->from('form_field_master as f');
-        if(is_array($allowFileds) && count($allowFileds) > 0){
+        if(is_array($allowFileds) && count($allowFileds) > 0 || true){
             $this->db->where_in('f.form_field_master_id', $allowFileds);
         }
         $result_obj = $this->db->get();
@@ -462,7 +462,7 @@ class Form_model extends CI_Model {
     public function getGroupdFieldData($group_code = ""){
         $this->db->select('gfc.*');
         $this->db->from('group_master as g');
-        $this->db->join('group_field_config as gfc','gfc.group_master_id = g.group_master_id','left');
+        $this->db->join('group_field_config as gfc','gfc.group_master_id = g.group_master_id');
         $this->db->where("g.group_code",$group_code);
         $result_obj = $this->db->get();
         $ret_data = is_object($result_obj) ? $result_obj->row_array() : [];

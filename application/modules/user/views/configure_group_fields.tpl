@@ -12,7 +12,7 @@
           </a>
         </h1>
         <br>
-        <span><%$group['group_name']%></span>
+        <span><%if $group['group_code'] eq 'School'%>School<%else if $group['group_code'] eq 'ChannelPartner'%>Staff<%else%><%$group['group_name']%><%/if%></span>
       </div>
     </nav>
 
