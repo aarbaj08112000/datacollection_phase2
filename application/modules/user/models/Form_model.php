@@ -9,7 +9,7 @@ class Form_model extends CI_Model {
     public function getFieldData($allowFileds = []){
         $this->db->select('f.*');
         $this->db->from('form_field_master as f');
-        if(is_array($allowFileds) && count($allowFileds) > 0 || true){
+        if(is_array($allowFileds) && count($allowFileds) > 0){
             $this->db->where_in('f.form_field_master_id', $allowFileds);
         }
         $result_obj = $this->db->get();
