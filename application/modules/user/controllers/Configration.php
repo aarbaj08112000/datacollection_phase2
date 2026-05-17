@@ -426,7 +426,7 @@ class Configration extends MY_Controller {
                 </a>';
             }
            
-            $data[$key]['group_name'] = $val['group_code'] == "ChannelPartner" ? "Staff" : ($val['group_code'] == "ChannelPartner" ? "Staff" : $val['group_name']);
+            $data[$key]['group_name'] = $val['group_code'] == "ChannelPartner" ? "Staff" : ($val['group_code'] == "School" ? "Student" : $val['group_name']);
         }
         
         $total_record = $this->Configration_model->getAllGroupsCount([], $post_data["search"]);

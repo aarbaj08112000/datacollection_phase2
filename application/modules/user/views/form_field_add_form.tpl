@@ -44,6 +44,7 @@
                         <option value="SentenceCase">SentenceCase</option>
                         <option value="Date">Date</option>
                         <option value="Uppecase">Uppecase</option>
+                        <option value="Email">Email</option>
                      </select>
                  	</div>
                   </div>

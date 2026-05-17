@@ -98,7 +98,6 @@ class Dashboard extends MY_Controller
             
             $total_record = $total = array_sum(array_column($value, 'total_record'));
             $today_response = $total = array_sum(array_column($value, 'today_response'));
-            // pr($value);
             $channelPatnerDataArr[] = [
                 "channel_patner_id" => $value[0]['channel_patner_id'],
                 "channel_patner_name" => $value[0]['channel_patner_name'],
@@ -106,6 +105,7 @@ class Dashboard extends MY_Controller
                 "contact_person" => $value[0]['contact_person'],
                 "total_record" => $total_record,
                 "today_response" => $today_response,
+                "form_type" => $value[0]['form_type']
             ];
         }
 		$selected_menu = "";

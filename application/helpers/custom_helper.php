@@ -180,7 +180,7 @@ function getStatusTitle($status = ""){
             $displayStatus = "Pending Approval";
             break;
         case 'school':
-            $displayStatus = "School";
+            $displayStatus = "Student";
             break;
         case 'collage':
             $displayStatus = "Collage";

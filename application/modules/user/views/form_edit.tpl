@@ -98,7 +98,7 @@
             <em >College/School Master</em></a>
           </h1>
           <br>
-          <span >Edit Information (<%if $school_data['form_type'] eq 'school'%>School<%else if $school_data['form_type'] eq 'office'%>Staff<%else if $school_data['form_type'] eq 'collage'%>Collage<%/if%>)</span>
+          <span >Edit Information (<%if $school_data['form_type'] eq 'school'%>Student<%else if $school_data['form_type'] eq 'office'%>Staff<%else if $school_data['form_type'] eq 'collage'%>Collage<%/if%>)</span>
         </div>
       </nav>
 <div class="dt-top-btn d-grid gap-2 d-md-flex justify-content-md-end mb-5">
@@ -168,7 +168,7 @@
             <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select class" name="course" />
             </div>
           </div>
-          <div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') %>hide<%/if%> <%if $school_data['form_type'] eq 'office'%>hide<%/if%>">
+          <div class="col-md-4 mt-3 section-box <%if $form_type eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="Section predefined values are available in the dropdown. You can select multiple options if required. If you need a new section value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="sectionToken" type="text" class="form-control autocomplete" placeholder="Select section" name="section" />

@@ -274,6 +274,8 @@ animation: after 2s infinite;
                                     onlyTitleCase
                                     <%else if $field['field_data']['field_type'] eq 'SentenceCase'%>
                                     onlySentenceCaseInput
+                                    <%else if $field['field_data']['field_type'] eq 'Email'%>
+                                    onlyEmailnput
                                     <%/if%>"  
                                     <%if $field['field_data']['form_name'] eq 'date_of_birth'%>
                                     max="<%date('Y-m-d')%>"

@@ -558,7 +558,7 @@ class Form extends MY_Controller {
         $data["school_id"] = $school_id;
         $data["base_url"] = base_url();
         $data['file_column_exist'] = $file_column_exist;
-        $data['url'] = $form_data['url'].date("_d-m-Y_H-i");
+        $data['url'] = $form_data['url'];
         $data['page_name'] = $page_name;
         $data['school_name'] = $form_data['name'];
         $this->smarty->loadView('data_collection_list.tpl', $data,'Yes','Yes');
@@ -2728,7 +2728,7 @@ class Form extends MY_Controller {
 		// Dynamic values (GET supported)
         $user_mobile_number = $this->session->userdata("user_mobile_number");
 		$school_name     = $details['school_name'];
-		$mobile          = "M-".$user_mobile_number.",".$school_data['school_contact_no'];
+		$mobile          = "M-".$details['mobile'];
 		$website         = "www.bharatidcard.com";
 		$channelPartner  = strtoupper(trim($details['channelPartner']));
         $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
@@ -3064,7 +3064,7 @@ class Form extends MY_Controller {
 
 		// Dynamic values (GET supported)
 		$school_name     = $details['school_name'];
-		$mobile          = "M-".$details['school_name'];
+		$mobile          = "M-".$details['mobile'];
 		$website         = "www.bharatidcard.com";
         $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
 		$section         = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);

@@ -406,6 +406,7 @@
                                        <div class="mt-3">
                                        <h5 class="mb-0 school-title" style="flex-grow: 1;"><%$college.channel_patner_name %></h5>
                                        <h6 class="mb-0 channel-title"><%$college.contact_person %></h6>
+                                       <span style="color: #646ec9;font-weight: 600;"><%getStatusTitle($college.form_type)%></span>
                                        </div>
                                     </div>
                                     <p style="display: flex; justify-content: space-between; margin-top: 15px;margin-bottom: 0px;">

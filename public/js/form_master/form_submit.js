@@ -25,7 +25,7 @@ const page = {
         $(this).val(this.value.replace(/[^0-9.]/g, ''));
         
     });
-    $('.onlySentenceCaseInput').on('input', function () {
+    $('.onlySentenceCaseInput').on('input keyup', function () {
         let value = $(this).val();
 
         // Capitalize the first letter of every sentence
@@ -51,13 +51,32 @@ const page = {
       $(this).val(value);
         
     });
-    $('.onlyTitleCase').on('input', function(event) {
+    $('.onlyTitleCase').on('input keyup', function(event) {
       let text = $(this).val();
       let titleCased = text.replace(/\w\S*/g, function(word) {
         return word.charAt(0).toUpperCase() + word.substr(1).toLowerCase();
       });
       $(this).val(titleCased);
         
+    });
+    $(document).on('input keyup', '.onlyEmailnput', function () {
+        let email = $(this).val();
+        // Email regex
+        let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (email !== '' && !emailPattern.test(email)) {
+            $(this).addClass('is-invalid');
+            var label = $(this).parents(".form-group").find("label.form-label").contents().filter(function() {
+                return this.nodeType === 3; // Filter out non-text nodes (nodeType 3 is Text node)
+              }).text().trim();
+            label = ((label.toLowerCase()));
+            var validation_message = "Please enter valid "+(label.toLowerCase()).replace(/[^\w\s*]/gi, '');
+            var label_html = "<label class='error mt-3'>"+validation_message+"</label>";
+            $(this).parents(".form-group").append(label_html)
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).parents(".form-group").find("label.error").remove();
+        }
     });
     },
     formInitiate: function(){
@@ -71,6 +90,18 @@ const page = {
 	          return;
 	        }
 	        var formData = new FormData($('.'+id)[0]);
+          var invalidFeild = $(".is-invalid").length;
+          if(invalidFeild > 0){
+            var label = $(".is-invalid").parents(".form-group").find("label.form-label").contents().filter(function() {
+                return this.nodeType === 3; // Filter out non-text nodes (nodeType 3 is Text node)
+              }).text().trim();
+            label = ((label.toLowerCase()));
+            var validation_message = "Please enter valid "+(label.toLowerCase()).replace(/[^\w\s*]/gi, '');
+            var label_html = "<label class='error mt-3'>"+validation_message+"</label>";
+            $(".is-invalid").parents(".form-group").find("label.error").remove();
+            $(".is-invalid").parents(".form-group").append(label_html)
+            return;
+          }
           $(".main-loader-box").show();
           $("body").addClass("loader-show");
 	        $.ajax({
@@ -112,7 +143,7 @@ const page = {
           var value = $(this).val();
           var dataLength = parseFloat($(this).attr('data-length'));
           var dataMax = parseFloat($(this).attr('data-max'));
-          console.log(dataMax,value.length)
+          // console.log(dataMax,value.length)
           if($(this).attr("type") == "radio"){
               var name = $(this).attr("name");
               var radio_button_value = $(`input[name='${name}']:checked`).val();
