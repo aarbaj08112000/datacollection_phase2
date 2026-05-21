@@ -718,12 +718,18 @@ class Form extends MY_Controller {
 
         // Download and add files to ZIP
         foreach ($images as $index => $fileUrl) {
-            $fileContents = @file_get_contents($fileUrl);
-            if ($fileContents !== false) {
+
+            if (file_exists($fileUrl)) {
+
                 $fileName = basename($fileUrl);
-                $zip->addFromString($fileName, $fileContents);
+
+                // Make filename unique
+                $uniqueFileName = $index . '_' . $fileName;
+
+                $zip->addFile($fileUrl, $uniqueFileName);
+
             } else {
-                error_log("Failed to download: $fileUrl");
+                error_log("File not found: $fileUrl");
             }
         }
 
