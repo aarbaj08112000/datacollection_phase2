@@ -72,6 +72,7 @@ const page = {
             label = ((label.toLowerCase()));
             var validation_message = "Please enter valid "+(label.toLowerCase()).replace(/[^\w\s*]/gi, '');
             var label_html = "<label class='error mt-3'>"+validation_message+"</label>";
+            $(this).parents(".form-group").find("label.error").remove();
             $(this).parents(".form-group").append(label_html)
         } else {
             $(this).removeClass('is-invalid');

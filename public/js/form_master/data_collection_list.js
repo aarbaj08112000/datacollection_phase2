@@ -363,58 +363,60 @@ const page = {
 
     customizeData: function (data) {
 
-        // ✅ 1. Remove Image column FIRST
-        let imageColIndex = data.header.indexOf("Image");
+    // Image handling
+    $('#form_data_listing tbody tr').each(function (rowIndex) {
 
-        if (imageColIndex !== -1) {
-            data.header.splice(imageColIndex, 1);
+        $(this).find('td').each(function (colIndex) {
 
-            data.body.forEach(function(row){
-                row.splice(imageColIndex, 1);
-            });
+            let $info = $(this).find(".image-info");
 
-            if (data.footer && data.footer.length) {
-                data.footer.forEach(function(row){
-                    row.splice(imageColIndex, 1);
-                });
-            }
-        }
+            if ($info.length > 0) {
 
-        // ✅ 2. Remove first & last column
-        data.header.shift();
-        data.header.pop();
+                let imageUrl = $info.attr('data-image') || 'No Image';
+                let imageName = imageUrl.split('/').pop();
 
-        data.body.forEach(function(row){
-            row.shift();
-            row.pop();
-        });
-
-        // ✅ 3. Footer fix
-        if (data.footer && data.footer.length) {
-            data.footer.forEach(function(row){
-                row.pop();
-            });
-        }
-
-        // ✅ 4. SAFE image handling (only if column still exists)
-        $('#form_data_listing tbody tr').each(function (rowIndex) {
-            $(this).find('td').each(function (colIndex) {
-
-                let $info = $(this).find(".image-info");
-
-                if ($info.length > 0) {
-                    let imageUrl = $info.attr('data-image') || 'No Image';
-                    let imageName = imageUrl.split('/').pop();
-
-                    if (data.body[rowIndex] && data.body[rowIndex][colIndex] !== undefined) {
-                        data.body[rowIndex][colIndex] = imageName.replace(".jpg", "");
-                    }
+                if (
+                    data.body[rowIndex] &&
+                    data.body[rowIndex][colIndex] !== undefined
+                ) {
+                    data.body[rowIndex][colIndex] = imageName.replace(".jpg", "");
                 }
-
-            });
+            }
         });
+    });
+    // Remove columns directly
+  
+  let columnTotal = column_details.length;
+  let remove_index  = image_col_indexs;
+  remove_index.push(columnTotal-1);
+  remove_index.push(0);
+  console.log(remove_index)
+  let removeCols = remove_index;
 
-    },
+  // remove from bigger index first
+  removeCols.sort((a, b) => b - a);
+
+  // Header
+  removeCols.forEach(function(colIndex){
+      data.header.splice(colIndex, 1);
+  });
+
+  // Body
+  data.body.forEach(function(row){
+      removeCols.forEach(function(colIndex){
+          row.splice(colIndex, 1);
+      });
+  });
+
+  // Footer
+  if (data.footer && data.footer.length) {
+      data.footer.forEach(function(row){
+          removeCols.forEach(function(colIndex){
+              row.splice(colIndex, 1);
+          });
+      });
+  }
+},
 
     customize: function (xlsx) {
         let sheet = xlsx.xl.worksheets['sheet1.xml'];

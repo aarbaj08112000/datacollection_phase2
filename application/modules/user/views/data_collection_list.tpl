@@ -224,6 +224,7 @@
     var id_download_url = '<%base_url('download_all_ids/')%><%$school_id%>';
     var url= '<%$url%>';
     var page_name = <%$page_name|@json_encode%>;
+    var image_col_indexs = <%$image_col_indexs|@json_encode%>
 </script>
 
     

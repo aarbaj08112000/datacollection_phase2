@@ -459,7 +459,7 @@ class Form extends MY_Controller {
         if($page_name == "data_collection_image_list"){
             $data_for_image_edit = ["student_name","father_name","image","section","class"];
         }
-        
+        $image_col_indexs = [];
         foreach ($from_field as $key => $value) {
             $value = json_decode($value,TRUE);
             $position = "dt-left";
@@ -485,6 +485,8 @@ class Form extends MY_Controller {
         
        
         }
+        
+        
         
         
         usort($column, function($a, $b) {
@@ -540,7 +542,14 @@ class Form extends MY_Controller {
                 "width" => "1%",
                 "className" => " dt-center checkbox-row",
                 "visible" => $page_name == "data_collection_image_list" ? false : true
-            ]);
+        ]);
+        $image_col_indexs = [];
+        foreach ($column as $key => $value) {
+            if($value['formType'] == "file"){
+                $image_col_indexs[] = $key;
+            }
+        }
+        $data['image_col_indexs'] = $image_col_indexs;
         $data['images_available'] = $images_available;
         $data["data"] = $column;
         $data["is_searching_enable"] = true;
@@ -749,19 +758,24 @@ class Form extends MY_Controller {
         $from_field = json_decode($form_data['from_field'],TRUE);
         $from_field = array_column($from_field, "field_data");
         $images_arr = [];
+        
         foreach ($from_data_collection_data as $ke => $val) {
             $form_details = json_decode($val['form_data'],TRUE);
+           
             $images = [];
             foreach ($from_field as $key => $value) {
+                 
                 $value = json_decode($value,TRUE);
                 if($value['form_type'] == "file"){
                     if($form_details[$value['form_name']] != ""){
                         $images[] = $form_details[$value['form_name']];
                     }
+                   
                 }
             }
             $images_arr[$val['sr_no']] = $images;
         }
+       
 
 
         
@@ -782,29 +796,39 @@ class Form extends MY_Controller {
 
         // Define the ZIP file name
         $zipFile = $temp_dir . "all_images".$form_data['url'].date("_d_m_Y_H_i_s").".zip";
-
+       
         // Create a new ZIP archive
+        if (!is_dir(dirname($zipFile))) {
+            mkdir(dirname($zipFile), 0777, true);
+        }
+
         $zip = new ZipArchive();
         if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
             die("Could not create ZIP file");
         }
+       
 
         foreach ($images_arr as $key => $value) {
+
             $folderName = $key . "/";
             $zip->addEmptyDir($folderName);
-            
-            // Download and add files to ZIP
+
             foreach ($value as $index => $fileUrl) {
-                $fileContents = @file_get_contents($fileUrl); // Suppress errors
-                if ($fileContents !== false) {
+
+                if (file_exists($fileUrl)) {
+
                     $fileName = basename($fileUrl);
-                    $zip->addFromString($folderName . $fileName, $fileContents);
+
+                    // Make unique filename
+                    $uniqueFileName = $index . "_" . $fileName;
+
+                    $zip->addFile($fileUrl, $folderName . $uniqueFileName);
+
                 } else {
-                    error_log("Failed to download: $fileUrl");
+                    error_log("File not found: $fileUrl");
                 }
             }
         }
-
         // Close the ZIP archive
         $zip->close();
 
@@ -1285,13 +1309,13 @@ class Form extends MY_Controller {
 
             $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
 
-            $folderPath .= "/".$key;
+            $uploadFolderPath = $folderPath."/".$key;
             
-            if (!is_dir($folderPath) && $folderPath != "") {
-                mkdir($folderPath, 0777, true);
+            if (!is_dir($uploadFolderPath) && $uploadFolderPath != "") {
+                mkdir($uploadFolderPath, 0777, true);
             }
 
-            $config["upload_path"] = $folderPath;
+            $config["upload_path"] = $uploadFolderPath;
             $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";
             $config['max_size'] = 10240;
 
@@ -1321,14 +1345,14 @@ class Form extends MY_Controller {
                 } else {
 
                     $upload_data = $this->upload->data();
-                    $uploadedFilePath = $folderPath . "/" . $upload_data['file_name'];
+                    $uploadedFilePath = $uploadFolderPath . "/" . $upload_data['file_name'];
 
                     // 🔥 STEP 1: Convert to JPG if needed
                     $fileType = strtolower(pathinfo($uploadedFilePath, PATHINFO_EXTENSION));
 
                     if ($fileType == 'png' || $fileType == 'jpeg') {
 
-                        $newFilePath = $folderPath . "/" . pathinfo($upload_data['file_name'], PATHINFO_FILENAME) . '.jpg';
+                        $newFilePath = $uploadFolderPath . "/" . pathinfo($upload_data['file_name'], PATHINFO_FILENAME) . '.jpg';
 
                         if ($fileType == 'png') {
                             $image = imagecreatefrompng($uploadedFilePath);
@@ -2089,13 +2113,13 @@ class Form extends MY_Controller {
             $fileName = $_FILES[$key]['name'];
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
             $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
-            $folderPath .= "/".$key;
+            $updateFolderPath = $folderPath."/".$key;
             // Ensure the folder exists, if not, create it
-            if (!is_dir($folderPath) && $folderPath != "") {
-                mkdir($folderPath, 0777, true);
+            if (!is_dir($updateFolderPath) && $updateFolderPath != "") {
+                mkdir($updateFolderPath, 0777, true);
             }
             // Set upload configuration
-            $config["upload_path"] = $folderPath;
+            $config["upload_path"] = $updateFolderPath;
             $config["allowed_types"] = "jpg|png|jpeg|bmp|heic";  // Allow jpg, png, and jpeg files
             $config['max_size'] = 10240;
             $this->load->library("upload", $config);
@@ -2120,12 +2144,12 @@ class Form extends MY_Controller {
                 } else {
                     // Upload successful, get the uploaded file data
                     $upload_data = $this->upload->data();
-                    $uploadedFilePath = $folderPath . "/" . $upload_data['file_name'];
+                    $uploadedFilePath = $updateFolderPath . "/" . $upload_data['file_name'];
 
                     // Convert image to JPG if it's PNG or JPEG
                     $fileType = strtolower(pathinfo($uploadedFilePath, PATHINFO_EXTENSION));
                     if ($fileType == 'png' || $fileType == 'jpeg') {
-                        $newFilePath = $folderPath . "/" . pathinfo($upload_data['file_name'], PATHINFO_FILENAME) . '.jpg';
+                        $newFilePath = $updateFolderPath . "/" . pathinfo($upload_data['file_name'], PATHINFO_FILENAME) . '.jpg';
 
                         // Load the image depending on its type
                         if ($fileType == 'png') {
