@@ -338,7 +338,7 @@ class Form_model extends CI_Model
                     if ($_SERVER['HTTP_HOST'] == 'localhost') {
                         $this->db->where("fd.form_data LIKE '%\"$name\": \"$val%' ESCAPE '!'", null, false);
                     } else {
-                        $this->db->where("fd.form_data LIKE '%" . $name . ": " . $val . "% ' ESCAPE '!'", null, false);
+                        $this->db->where("fd.form_data LIKE '%\"$name\":\"$val%' ESCAPE '!'", null, false);
                     }
 
                 } else if ($value['key'] == "card_generated") {

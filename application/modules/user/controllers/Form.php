@@ -477,6 +477,7 @@ class Form extends MY_Controller
                 $width = "8%";
                 $file_column_exist = true;
                 $hide_search_class = "hide_search";
+                $images_available = "Yes";
             }
             if (in_array($value['form_name'], $data_for_image_edit) || count($data_for_image_edit) == 0) {
                 $column[] = [
@@ -1001,7 +1002,7 @@ class Form extends MY_Controller
                 $template_details['school_image'] = $school_image;
                 $template_details['form_type'] = $form_type;
                 if ($user_role == "ChannelPartner") {
-                    $template_image = $this->generateFormChanelPartTemplate($template_details);
+                    $template_image = $this->generateFormChanelPartTemplate($template_details, $school_data);
                 } else {
                     $template_image = $this->generateFormSchoolTemplate($template_details);
                 }
@@ -1102,11 +1103,14 @@ class Form extends MY_Controller
         $form_edit_val = $this->Form_model->getSchoolFormWithAddedBy($post_data['school_id']);
         $_POST['name'] = $_POST['school_name'];
         $form_type = $this->input->post('form_heder_type');
-        $school_data = $this->session->userdata("extra_json");
+        $school_data = $form_edit_val['channel_patner_id'] > 0 ? $form_edit_val["extra_json"] : $this->session->userdata("extra_json");
         $user_role = $this->session->userdata("role");
         $url = $post_data['url'];
         $user_role = $form_edit_val['user_role'];
         $school_data = $user_role == "School" || $user_role == "ChannelPartner" ? (array) json_decode($form_edit_val['extra_json']) : [];
+        if (count($school_data) == 0 && $form_edit_val['channel_patner_id'] > 0) {
+            $school_data = (array) json_decode($form_edit_val['extra_json']);
+        }
 
         if ($user_role == "ChannelPartner") {
             $name = $school_data['school_name'];
@@ -1227,7 +1231,7 @@ class Form extends MY_Controller
             $template_details['school_image'] = $school_image;
             $template_details['form_type'] = $form_type;
             if ($user_role == "ChannelPartner") {
-                $template_image = $this->generateFormChanelPartTemplate($template_details);
+                $template_image = $this->generateFormChanelPartTemplate($template_details, $school_data);
             } else {
                 $template_image = $this->generateFormSchoolTemplate($template_details);
             }
@@ -2781,9 +2785,9 @@ class Form extends MY_Controller
 
         return rmdir($folderPath);
     }
-    public function generateFormChanelPartTemplate($details = [])
+    public function generateFormChanelPartTemplate($details = [], $school_data = [])
     {
-        $school_data = $this->session->userdata("extra_json");
+        // $school_data = $this->session->userdata("extra_json");
         /**
          * Dynamic Banner Generator (PHP GD)
          */
@@ -3759,20 +3763,6 @@ class Form extends MY_Controller
     }
     public function generateStudentIdCard($idCardData = array(), $school_data = array(), $file_name = [])
     {
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
-        $idCardData[] = $idCardData[0];
         $fields = $idCardData;
 
         // Card layout constants (mm)
