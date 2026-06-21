@@ -237,7 +237,7 @@
            
 
             <!-- vertical menu bar -->
-            <%include 'vertical_menu.tpl' class="pc-view-menu"%>
+            <%include 'vertical_menu.tpl' class="pc-view-menu" className="btn btn-seconday"%>
             <div>
             <%if $config['menu_type'] eq 'vertical'%>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">

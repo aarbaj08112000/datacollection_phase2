@@ -1,16 +1,18 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-require_once FCPATH.'/vendor/autoload.php';
+require_once FCPATH . '/vendor/autoload.php';
 use Dompdf\Dompdf;
-class Form extends MY_Controller {
-    public function __construct() {
+class Form extends MY_Controller
+{
+    public function __construct()
+    {
         parent::__construct();
         // sent_link_approved("Aarbaj","8485835691");
         $this->load->model('Form_model');
-        require_once(APPPATH.'libraries/tcpdf/tcpdf.php');
+        require_once(APPPATH . 'libraries/tcpdf/tcpdf.php');
     }
-    
-    
+
+
 
     public function form_creation()
     {
@@ -18,27 +20,27 @@ class Form extends MY_Controller {
         // pr($data,1);
         $get_data = $this->input->get();
         $form_type = isset($get_data['type']) && $get_data['type'] != "" ? base64_decode($get_data['type']) : "";
-        $data['form_type'] = in_array($form_type,["school","office"]) ? $form_type : "school";
+        $data['form_type'] = in_array($form_type, ["school", "office"]) ? $form_type : "school";
         $data['user_role'] = $user_role = $this->session->userdata("role");
         $user_type = $form_type == "school" ? "School" : "ChannelPartner";
         $allowFieldData = $this->Form_model->getGroupdFieldData($user_type);
-        
+
         $allowFileds = $allowFieldData['selected_fields'] != "" && $allowFieldData['selected_fields'] != null ? json_decode($allowFieldData['selected_fields']) : [];
         // pr($allowFileds,1);
-        if($user_role == "ChannelPartner"){
+        if ($user_role == "ChannelPartner") {
             $data['user_id'] = $this->session->userdata("user_id");
         }
         $data['field_data'] = $this->Form_model->getFieldData($allowFileds);
         $data['channel_patner'] = $this->Form_model->getChannelPatnerList();
         $school_data = $this->session->userdata("extra_json");
         // pr($school_data,1);
-        if(count($school_data) > 0 && $user_role == "School"){
+        if (count($school_data) > 0 && $user_role == "School") {
             $data["school_data"] = $school_data = $this->session->userdata("extra_json");
             $name = $school_data['school_name'];
             $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
             $str = preg_replace('/\s+/', '_', $str);
             $name = strtoupper($str);
-            $data['url'] = $user_role == "School" ? $name."_STUDENT_".date("d_M_Y_h_i_s_A") : $name."_STAFF_".date("d_M_Y_h_i_s_A");
+            $data['url'] = $user_role == "School" ? $name . "_STUDENT_" . date("d_M_Y_h_i_s_A") : $name . "_STAFF_" . date("d_M_Y_h_i_s_A");
             $data["contact_person"] = $this->session->userdata("user_name");
             $data["mobile_number"] = $this->session->userdata("user_mobile_number");
         }
@@ -46,29 +48,29 @@ class Form extends MY_Controller {
         $data['payment_qr'] = base_url($this->config->item("linkPaymentQr"));
         $data['whats_app_number'] = $this->config->item("whatsAppNumber");
         // pr($data['payment_qr'],1);
-    $this->smarty->loadView('form.tpl', $data,'Yes','Yes');
+        $this->smarty->loadView('form.tpl', $data, 'Yes', 'Yes');
     }
     public function form_creation_edit()
     {
         $school_id = $this->uri->segment(2);
         $data = [];
         $data['school_data'] = $this->Form_model->getSchoolFormCollectionDetail($school_id);
-        $form_selected_feild = json_decode($data['school_data']['from_field'],TRUE);
+        $form_selected_feild = json_decode($data['school_data']['from_field'], TRUE);
         $form_selected_feild_arr = [];
         foreach ($form_selected_feild as $key => $value) {
-            $feild = json_decode($value['field_data'],TRUE);
+            $feild = json_decode($value['field_data'], TRUE);
             $form_selected_feild_arr[$feild['form_field_master_id']] = $value['required'];
         }
         $user_role = $this->session->userdata("role");
         $user_type = $data['school_data']['form_type'] == "school" ? "School" : "ChannelPartner";
         $allowFieldData = $this->Form_model->getGroupdFieldData($user_type);
         $allowFileds = $allowFieldData['selected_fields'] != "" && $allowFieldData['selected_fields'] != null ? json_decode($allowFieldData['selected_fields']) : [];
-       
-        $data['form_selected_feild'] =$field_data= $form_selected_feild_arr;
-        $data['field_data'] =  $this->Form_model->getFieldData($allowFileds);
+
+        $data['form_selected_feild'] = $field_data = $form_selected_feild_arr;
+        $data['field_data'] = $this->Form_model->getFieldData($allowFileds);
         $data['channel_patner'] = $this->Form_model->getChannelPatnerList();
         $indexing_field = [];
-        
+
         $priority_ids = array_keys($form_selected_feild_arr);
         $priority_fields = [];
         $other_fields = [];
@@ -106,10 +108,10 @@ class Form extends MY_Controller {
         }
         $data['indexing_field'] = $indexing_field;
         $data['user_role'] = $user_role = $this->session->userdata("role");
-        if($user_role == "ChannelPartner"){
+        if ($user_role == "ChannelPartner") {
             $data['user_id'] = $this->session->userdata("user_id");
         }
-        $this->smarty->loadView('form_edit.tpl', $data,'Yes','Yes');
+        $this->smarty->loadView('form_edit.tpl', $data, 'Yes', 'Yes');
     }
 
     public function formListing()
@@ -117,10 +119,10 @@ class Form extends MY_Controller {
         // $this->generateStudentIdCard();
         $get_data = $this->input->get();
         $current_route = $this->uri->segment(1);
-        checkGroupAccess($current_route,"list","Yes");
+        checkGroupAccess($current_route, "list", "Yes");
         $user_role = $this->session->userdata("role");
         $data["filter_status"] = isset($get_data['status']) ? $get_data['status'] : "";
-        if($user_role != "School"){
+        if ($user_role != "School") {
             $column[] = [
                 "data" => "image",
                 "title" => "Image",
@@ -134,22 +136,22 @@ class Form extends MY_Controller {
                 "className" => "dt-left",
             ];
         }
-        if($user_role != "ChannelPartner" || $user_role != "School"){
-        $column[] = [
-            "data" => "type",
-            "title" => "Type",
-            "width" => "5%",
-            "className" => "dt-center",
-        ];
+        if ($user_role != "ChannelPartner" || $user_role != "School") {
+            $column[] = [
+                "data" => "type",
+                "title" => "Type",
+                "width" => "5%",
+                "className" => "dt-center",
+            ];
         }
         $column[] = [
             "data" => "url",
             "title" => "Url",
             "width" => "10%",
             "className" => "dt-left",
-            
+
         ];
-        
+
         $column[] = [
             "data" => "contact_person",
             "title" => "Contact Person",
@@ -256,7 +258,7 @@ class Form extends MY_Controller {
             "className" => "dt-left",
             "visible" => false
         ];
-        
+
         $data["data"] = $column;
         $data["is_searching_enable"] = true;
         $data["is_paging_enable"] = true;
@@ -269,15 +271,16 @@ class Form extends MY_Controller {
             'public/assets/images/images/no_data_found_new.png" height="150" width="150"><br> No Employee data found..!</div>';
         $data["is_top_searching_enable"] = true;
         $data["sorting_column"] = json_encode([[11, 'desc']]);
-        $data["page_length_arr"] = [[10,100,500,1000,2000,2500,3000,-1], [10,100,500,1000,2000,2500,3000,'All']];
+        $data["page_length_arr"] = [[10, 100, 500, 1000, 2000, 2500, 3000, -1], [10, 100, 500, 1000, 2000, 2500, 3000, 'All']];
         $data["admin_url"] = base_url();
         $data["base_url"] = base_url();
         $data["is_deleted"] = $current_route == "trash_form_listing" ? 1 : 0;
         $data['user_role'] = $user_role;
-        $this->smarty->loadView('form_listing.tpl', $data,'Yes','Yes');
+        $this->smarty->loadView('form_listing.tpl', $data, 'Yes', 'Yes');
     }
 
-    public function formListingData(){
+    public function formListingData()
+    {
         $post_data = $this->input->post();
         $user_role = $this->session->userdata("role");
         $column_index = array_column($post_data["columns"], "data");
@@ -296,76 +299,76 @@ class Form extends MY_Controller {
         $base_url = $this->config->item("base_url");
         $is_deleted = $post_data['data']['is_deleted'];
         $status = $post_data['data']['filter_status'];
-        $data = $this->Form_model->getSchoolData($condition_arr,$post_data["search"],$is_deleted,$status);
+        $data = $this->Form_model->getSchoolData($condition_arr, $post_data["search"], $is_deleted, $status);
         foreach ($data as $key => $val) {
-            $data[$key]['image'] = "<img src='".base_url($val['image'])."' alt='' width='75' height='75' title='College Logo'>";
-            $data[$key]['url'] ='<a href="' . base_url("form/" . base64_encode($val['url'])) . '" target="_blank">' . base_url("form/" . base64_encode($val['url'])) . '</a>';
+            $data[$key]['image'] = "<img src='" . base_url($val['image']) . "' alt='' width='75' height='75' title='College Logo'>";
+            $data[$key]['url'] = '<a href="' . base_url("form/" . base64_encode($val['url'])) . '" target="_blank">' . base_url("form/" . base64_encode($val['url'])) . '</a>';
             $data[$key]['channel_patner'] = display_no_character($val['channel_patner']);
             $data[$key]['type'] = display_no_character(getStatusTitle($val['form_type']));
             $data[$key]['address'] = display_no_character($val['address']);
             $data[$key]['comment'] = display_no_character($val['comment']);
-            $edit_url = base_url("/form_creation_edit/".$val['school_id']);
+            $edit_url = base_url("/form_creation_edit/" . $val['school_id']);
             $data[$key]['action'] = "";
-            if(checkGroupAccess("data_collection_list","list","No") && $is_deleted == 0){
+            if (checkGroupAccess("data_collection_list", "list", "No") && $is_deleted == 0) {
                 $data[$key]['action'] .= '
                  <span title="View">
-                    <a href="'.base_url().'data_collection_list/'.$val['school_id'].'" >
+                    <a href="' . base_url() . 'data_collection_list/' . $val['school_id'] . '" >
                         <i class="ti ti-eye"></i>
                     </a>
                 </span>';
-                if(!in_array($user_role,["School"])){
+                if (!in_array($user_role, ["School"])) {
                     $data[$key]['action'] .= '
                     <span title="Edit Image">
-                        <a href="'.base_url().'data_collection_image_list/'.$val['school_id'].'" >
+                        <a href="' . base_url() . 'data_collection_image_list/' . $val['school_id'] . '" >
                             <i class="ti ti-photo-up"></i>
                         </a>
                 </span>';
                 }
             }
-            if($is_deleted == 0){
-            $data[$key]['action'] .= '
+            if ($is_deleted == 0) {
+                $data[$key]['action'] .= '
                <span class="copy-text">
-                      <i class="ti ti-copy copy-url" title="Copy" data-url="'.base_url("/form/".base64_encode($val['url'])).'"></i>
+                      <i class="ti ti-copy copy-url" title="Copy" data-url="' . base_url("/form/" . base64_encode($val['url'])) . '"></i>
                 </span>
             ';
             }
-            if(checkGroupAccess("form_listing","update","No")){
-                if($is_deleted == 0){
-                $data[$key]['action'] .= '
-                <a class="" title="Edit" href="'.$edit_url.'">
+            if (checkGroupAccess("form_listing", "update", "No")) {
+                if ($is_deleted == 0) {
+                    $data[$key]['action'] .= '
+                <a class="" title="Edit" href="' . $edit_url . '">
                     <i class="ti ti-edit"></i>
                     </a>';
                 }
-                if(checkGroupAccess("form_listing","delete","No")){
-                    if($is_deleted == 0){
-                        $data[$key]['action'] .='<span class="recycle-school" title="Rescycle Bin" data-id="'.$val['school_id'].'">
+                if (checkGroupAccess("form_listing", "delete", "No")) {
+                    if ($is_deleted == 0) {
+                        $data[$key]['action'] .= '<span class="recycle-school" title="Rescycle Bin" data-id="' . $val['school_id'] . '">
                         <i class="ti ti-trash"></i>
                         </span>';
-                    }else{
-                        $data[$key]['action'] .='<span class="delete-school" title="Delete" data-id="'.$val['school_id'].'">
+                    } else {
+                        $data[$key]['action'] .= '<span class="delete-school" title="Delete" data-id="' . $val['school_id'] . '">
                             <i class="ti ti-trash"></i>
-                        </span><span class="restore-school" title="Restore" data-id="'.$val['school_id'].'">
+                        </span><span class="restore-school" title="Restore" data-id="' . $val['school_id'] . '">
                             <i class="ti ti-refresh"></i>
                         </span>';
                     }
                 }
 
-                if($is_deleted == 0){
-                    if(!in_array($user_role,["ChannelPartner","School"])){
+                if ($is_deleted == 0) {
+                    if (!in_array($user_role, ["ChannelPartner", "School"])) {
                         $data[$key]['action'] .= '
-                        <span class="status-school" title="Change Status" data-status="'.$val['status'].'" data-id="'.$val['school_id'].'">
+                        <span class="status-school" title="Change Status" data-status="' . $val['status'] . '" data-id="' . $val['school_id'] . '">
                             <i class="ti ti-clock"></i>
                         </span>';
                     }
-                    if(checkGroupAccess("form_listing","import","No") ){
+                    if (checkGroupAccess("form_listing", "import", "No")) {
                         $data[$key]['action'] .= '  
-                            <span class="upload-school-data" title="Import Data"  data-id="'.$val['school_id'].'">
+                            <span class="upload-school-data" title="Import Data"  data-id="' . $val['school_id'] . '">
                                 <i class="ti ti-upload"></i>
                             </span>
                             ';
                     }
-                    if(!in_array($user_role,["School","ChannelPartner"])){
-                    $data[$key]['action'] .= '  
+                    if (!in_array($user_role, ["School", "ChannelPartner"])) {
+                        $data[$key]['action'] .= '  
                             <a href="idcard/designer/' . $val['school_id'] . '" title="Change template">
                                 <span class="" data-id="' . $val['school_id'] . '">
                                     <i class="ti ti-template"></i>
@@ -377,35 +380,38 @@ class Form extends MY_Controller {
             }
             $data[$key]['status'] = getStatusTitle($val['status']);
         }
-        
-        
+
+
         $data["data"] = $data;
         // pr($data,1);
-        $total_record = $this->Form_model->getSchoolDataCount([], $post_data["search"],$is_deleted,$status);
+        $total_record = $this->Form_model->getSchoolDataCount([], $post_data["search"], $is_deleted, $status);
         $data["recordsTotal"] = $total_record['total_record'];
         $data["recordsFiltered"] = $total_record['total_record'];
         echo json_encode($data);
         exit();
     }
-    public function recycle_school(){
+    public function recycle_school()
+    {
         $post_data = $this->input->post();
-        $update_data = ["is_delete"=>1];
-        $this->Form_model->updateSchoolData($update_data,$post_data['school_id']);
+        $update_data = ["is_delete" => 1];
+        $this->Form_model->updateSchoolData($update_data, $post_data['school_id']);
         $ret_arr['messages'] = "Record add in recycle bin successfully.";
         $ret_arr['success'] = 1;
         echo json_encode($ret_arr);
         exit();
     }
-    public function restore_school(){
+    public function restore_school()
+    {
         $post_data = $this->input->post();
-        $update_data = ["is_delete"=>0];
-        $this->Form_model->updateSchoolData($update_data,$post_data['school_id']);
+        $update_data = ["is_delete" => 0];
+        $this->Form_model->updateSchoolData($update_data, $post_data['school_id']);
         $ret_arr['messages'] = "Record add in recycle bin successfully.";
         $ret_arr['success'] = 1;
         echo json_encode($ret_arr);
         exit();
     }
-    public function delete_school(){
+    public function delete_school()
+    {
         $post_data = $this->input->post();
         $this->Form_model->deleteSchoolData($post_data['school_id']);
         $ret_arr['messages'] = "Record deleted successfully.";
@@ -413,83 +419,84 @@ class Form extends MY_Controller {
         echo json_encode($ret_arr);
         exit();
     }
-    public function change_status(){
+    public function change_status()
+    {
         $post_data = $this->input->post();
-        $update_data = ["status"=>$post_data['status']];
+        $update_data = ["status" => $post_data['status']];
         $school_data = $this->Form_model->getSchoolFormCollectionDetail($post_data['school_id']);
         $userDetails = $this->Form_model->getUserDetails($school_data['added_by']);
         $old_status = $school_data['status'];
-        
-        $this->Form_model->updateSchoolData($update_data,$post_data['school_id']);
-        if($old_status == "PendingApproval" && $post_data['status'] == "Active" && ($userDetails['user_role'] == "ChannelPartner" || $userDetails['user_role'] == "School")){
-            sent_link_approved($school_data['name'],$userDetails['user_mobile_number']);
+
+        $this->Form_model->updateSchoolData($update_data, $post_data['school_id']);
+        if ($old_status == "PendingApproval" && $post_data['status'] == "Active" && ($userDetails['user_role'] == "ChannelPartner" || $userDetails['user_role'] == "School")) {
+            sent_link_approved($school_data['name'], $userDetails['user_mobile_number']);
             $admin_mobile_number = $this->session->userdata("user_mobile_number");
-            sent_link_approved_admin($school_data['name'],$admin_mobile_number);
+            sent_link_approved_admin($school_data['name'], $admin_mobile_number);
         }
         $ret_arr['messages'] = "Status updated successfully.";
         $ret_arr['success'] = 1;
         echo json_encode($ret_arr);
         exit();
     }
-    
+
     public function dataCollectionList()
     {
         $school_id = $this->uri->segment(2);
         $page_name = $this->uri->segment(1);
-        if($this->session->userdata("role") == "ChannelPartner"){
+        if ($this->session->userdata("role") == "ChannelPartner") {
             $channel_patner_id = $this->session->userdata("user_id");
-            $form_data = $this->Form_model->checkChannelPatnerAccessFormData($channel_patner_id,$school_id);
-            if(!(count($form_data) > 0)){
+            $form_data = $this->Form_model->checkChannelPatnerAccessFormData($channel_patner_id, $school_id);
+            if (!(count($form_data) > 0)) {
                 $previous_page = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'No previous page';
                 $forbidden_page = base_url('forbidden_page');
                 header("Location: $forbidden_page");
                 die();
             }
         }
-        checkGroupAccess("data_collection_list","list","Yes");
+        checkGroupAccess("data_collection_list", "list", "Yes");
         $form_data = $this->Form_model->getFormJsonData($school_id);
         $folderPath = "public/uploads/data_collection_img/" . $form_data['url'];
         $images_available = is_dir($folderPath) ? "Yes" : "No";
         // pr($form_data,1);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
         $column = [];
         $file_column_exist = false;
         $data_for_image_edit = [];
-        if($page_name == "data_collection_image_list"){
-            $data_for_image_edit = ["student_name","father_name","image","section","class"];
+        if ($page_name == "data_collection_image_list") {
+            $data_for_image_edit = ["student_name", "father_name", "image", "section", "class"];
         }
         $image_col_indexs = [];
         foreach ($from_field as $key => $value) {
-            $value = json_decode($value,TRUE);
+            $value = json_decode($value, TRUE);
             $position = "dt-left";
             $width = "10%";
             $hide_search_class = "";
-            if($value['form_type'] == "file"){
+            if ($value['form_type'] == "file") {
                 $position = "dt-center";
                 $width = "8%";
                 $file_column_exist = true;
                 $hide_search_class = "hide_search";
             }
-            if(in_array($value['form_name'],$data_for_image_edit) || count($data_for_image_edit) == 0){
-            $column[] = [
-                "name" => $value['form_name'],
-                "data" => preg_replace('/[^a-zA-Z0-9\s@#!]/', '', $value['form_name']),
-                "title" => $value['form_title'],
-                "width" => $width,
-                    "className" => "search ".$position." ".$hide_search_class,
-                "formType" => $value['form_type'],
-                "field_type" => $value['field_type']
-            ];
+            if (in_array($value['form_name'], $data_for_image_edit) || count($data_for_image_edit) == 0) {
+                $column[] = [
+                    "name" => $value['form_name'],
+                    "data" => preg_replace('/[^a-zA-Z0-9\s@#!]/', '', $value['form_name']),
+                    "title" => $value['form_title'],
+                    "width" => $width,
+                    "className" => "search " . $position . " " . $hide_search_class,
+                    "formType" => $value['form_type'],
+                    "field_type" => $value['field_type']
+                ];
+            }
+
+
         }
-        
-       
-        }
-        
-        
-        
-        
-        usort($column, function($a, $b) {
+
+
+
+
+        usort($column, function ($a, $b) {
             // Put "file" formType first
             if ($a['formType'] === 'file' && $b['formType'] !== 'file') {
                 return -1;
@@ -499,7 +506,7 @@ class Form extends MY_Controller {
             }
             return 0; // Otherwise, leave the order unchanged
         });
-        if(($this->session->userdata("role") == "Admin" || $this->session->userdata("role") == "SuperAdmin") && $page_name == "data_collection_list"){
+        if (($this->session->userdata("role") == "Admin" || $this->session->userdata("role") == "SuperAdmin") && $page_name == "data_collection_list") {
             $column[] = [
                 "name" => "card_generated",
                 "data" => "card_generated",
@@ -517,35 +524,35 @@ class Form extends MY_Controller {
         ];
 
 
-        if($file_column_exist || true){
+        if ($file_column_exist || true) {
             $column[] = [
                 "data" => "action",
                 "title" => "Action",
                 "width" => "15%",
                 "className" => "status dt-center"
             ];
-            
+
         }
-        
-       
-        array_unshift($column,[
-               "name" => "sr_no",
-                "data" => "sr_no",
-                "title" => "Sr. No.",
-                "width" => "5%",
-                "className" => "search dt-center"
-            ]);
-        
-        array_unshift($column,[
-                "data" => "check_box",
-                "title" => ' <input class="form-check-input check-all-input" type="checkbox" value="">',
-                "width" => "1%",
-                "className" => " dt-center checkbox-row",
-                "visible" => $page_name == "data_collection_image_list" ? false : true
+
+
+        array_unshift($column, [
+            "name" => "sr_no",
+            "data" => "sr_no",
+            "title" => "Sr. No.",
+            "width" => "5%",
+            "className" => "search dt-center"
+        ]);
+
+        array_unshift($column, [
+            "data" => "check_box",
+            "title" => ' <input class="form-check-input check-all-input" type="checkbox" value="">',
+            "width" => "1%",
+            "className" => " dt-center checkbox-row",
+            "visible" => $page_name == "data_collection_image_list" ? false : true
         ]);
         $image_col_indexs = [];
         foreach ($column as $key => $value) {
-            if($value['formType'] == "file"){
+            if ($value['formType'] == "file") {
                 $image_col_indexs[] = $key;
             }
         }
@@ -563,21 +570,22 @@ class Form extends MY_Controller {
             'public/assets/images/images/no_data_found_new.png" height="150" width="150"><br> No Employee data found..!</div>';
         $data["is_top_searching_enable"] = true;
         $data["sorting_column"] = json_encode([[11, 'desc']]);
-        $data["page_length_arr"] = [[50,100,500,1000,2000,2500,3000,-1], [50,100,500,1000,2000,2500,3000,'All']];
+        $data["page_length_arr"] = [[50, 100, 500, 1000, 2000, 2500, 3000, -1], [50, 100, 500, 1000, 2000, 2500, 3000, 'All']];
         $data["school_id"] = $school_id;
         $data["base_url"] = base_url();
         $data['file_column_exist'] = $file_column_exist;
         $data['url'] = $form_data['url'];
         $data['page_name'] = $page_name;
         $data['school_name'] = $form_data['name'];
-        $this->smarty->loadView('data_collection_list.tpl', $data,'Yes','Yes');
+        $this->smarty->loadView('data_collection_list.tpl', $data, 'Yes', 'Yes');
     }
 
-    public function form_data_listing(){
+    public function form_data_listing()
+    {
         $post_data = $this->input->post();
         $row_search = [];
         foreach ($post_data['columns'] as $key => $value) {
-            if($value['search']['value'] != "" && $value['search']['value'] !=  null){
+            if ($value['search']['value'] != "" && $value['search']['value'] != null) {
                 $row_search[] = [
                     "key" => $value['name'],
                     "val" => $value['search']['value']
@@ -600,92 +608,95 @@ class Form extends MY_Controller {
         $condition_arr["start"] = $post_data["start"];
         $condition_arr["length"] = $post_data["length"];
         $base_url = $this->config->item("base_url");
-        $form_data = $this->Form_model->getFormDetails($condition_arr,$post_data["search"],$school_id,$row_search);
+        $form_data = $this->Form_model->getFormDetails($condition_arr, $post_data["search"], $school_id, $row_search);
         $role = $this->session->userdata('role');
         $data = [];
         foreach ($form_data as $key => $value) {
-            
-            $form_data = json_decode($value['form_data'],TRUE);
+
+            $form_data = json_decode($value['form_data'], TRUE);
             $row_value = [];
             $file_column_exist = false;
+            $image_count_val = 0;
             foreach ($column_details as $ke => $val) {
-                $extra_style = $post_data['data']['page_name'] == "data_collection_image_list" ? 'style="font-size: 32px !important;"' : ""; 
-                if($val['data'] == "sr_no"){
+                $extra_style = $post_data['data']['page_name'] == "data_collection_image_list" ? 'style="font-size: 32px !important;"' : "";
+                if ($val['data'] == "sr_no") {
                     $row_value[$val['data']] = display_no_character($value[$val['data']]);
-                }else if($val['data'] == "check_box"){
-                    $row_value[$val['data']] = ' <input class="form-check-input check-row-input" type="checkbox" value="'.$value['form_data_collection_id'].'">';
-                }else if($val['formType'] == "file"){
+                } else if ($val['data'] == "check_box") {
+                    $row_value[$val['data']] = ' <input class="form-check-input check-row-input" type="checkbox" value="' . $value['form_data_collection_id'] . '">';
+                } else if ($val['formType'] == "file") {
                     $file_column_exist = true;
                     $form_data[$val['data']] = $form_data[$val['name']] != "" ? $form_data[$val['name']] : base_url("public/assets/images/no-pictures.png");
-                    $file_name = str_replace("public/uploads/data_collection_img/","",$form_data[$val['name']]);
-                    $file_name = str_replace($value['url']."/","",$file_name);
-                    $file_name = explode("/",$file_name);
+                    $file_name = str_replace("public/uploads/data_collection_img/", "", $form_data[$val['name']]);
+                    $file_name = str_replace($value['url'] . "/", "", $file_name);
+                    $file_name = explode("/", $file_name);
                     $file_name = $file_name[1] != "" ? $file_name[1] : "";
                     $file_name_only = $form_data[$val['name']]; // abc.jpg
                     if (strpos($form_data[$val['name']], '.jpg') !== false) {
                         $row_value[$val['data']] = '
-                            <i class="ti ti-eye image-preview" title="View Images" '.$extra_style.' data-src="'.base_url($form_data[$val['name']]).'"></i>
-                            <span class="image-info" data-image="'.$file_name_only.'" style="display:none;">'.$file_name_only.'</span>';
-                    }else{
+                            <i class="ti ti-eye image-preview" title="View Images" ' . $extra_style . ' data-src="' . base_url($form_data[$val['name']]) . '"></i>
+                            <span class="image-info" data-count="' . $image_count_val . '" data-image="' . $file_name_only . '" style="display:none;">' . $file_name_only . '</span>';
+                    } else {
                         $row_value[$val['data']] = display_no_character();
                     }
+                    $image_count_val++;
                     // $row_value[$val['data']] = "<img src='".base_url($form_data[$val['name']])."' alt='' width='75' height='75' title='' data-image='".$file_name."'>" ;
-                }else if($val['field_type'] == "Date"){
+                } else if ($val['field_type'] == "Date") {
                     $row_value[$val['data']] = $form_data[$val['name']] != "" ? defaultDateFormat($form_data[$val['name']]) : display_no_character($form_data[$val['name']]);
-                }else{
+                } else {
                     $row_value[$val['data']] = display_no_character($form_data[$val['name']]);
                 }
-                if($val['data'] == "action"){
+                if ($val['data'] == "action") {
                     $row_value[$val['data']] = "";
                     // pr($post_data,1);.select2-container
-                    if($post_data['data']['page_name'] == "data_collection_list"){
-                    if($file_column_exist && !in_array($role,['Employee'])){
-                        $row_value[$val['data']] = '<a class="me-2" href="'.base_url('download_images/').$value['form_data_collection_id'].'"><i class="ti ti-photo-down" title="Download Images"></i>';   
-                    }
-                    if(!in_array($role,['Employee','ChannelPartner'])){
-                        $row_value[$val['data']] .= '<a class="me-2" href="'.base_url('download_all_ids/').$value['school_master_id']."/".$value['form_data_collection_id'].'"><i class="ti ti-id-badge-2" title="Download Ids"></i>';
-                    }
-                    $row_value[$val['data']] .= '<a class="me-2 preview-id" href="javascript:void(0)" data-href="'.base_url('preview_id_card/').$value['school_master_id']."/".$value['form_data_collection_id'].'"><i class="ti ti-eye" title="Preview Id"></i>';
-                        if(in_array($role,['Employee','ChannelPartner',"SuperAdmin","Admin"])){
-                        $row_value[$val['data']] .= '<a class="me-2 edit-from-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i class="ti ti-edit" title="Edit Data"></i>';
-                    }
-                    }else{
-                         $row_value[$val['data']] .= '<a  class="me-2 edit-image-data" href="javascript:void(0)" data-collection-id="'.$value['form_data_collection_id'].'"><i '.$extra_style.' class="ti ti-photo-up" title="Edit Data"></i>';
+                    if ($post_data['data']['page_name'] == "data_collection_list") {
+                        if ($file_column_exist && !in_array($role, ['Employee'])) {
+                            $row_value[$val['data']] = '<a class="me-2" href="' . base_url('download_images/') . $value['form_data_collection_id'] . '"><i class="ti ti-photo-down" title="Download Images"></i>';
+                        }
+                        if (!in_array($role, ['Employee', 'ChannelPartner'])) {
+                            $row_value[$val['data']] .= '<a class="me-2" href="' . base_url('download_all_ids/') . $value['school_master_id'] . "/" . $value['form_data_collection_id'] . '"><i class="ti ti-id-badge-2" title="Download Ids"></i>';
+                        }
+                        $row_value[$val['data']] .= '<a class="me-2 preview-id" href="javascript:void(0)" data-href="' . base_url('preview_id_card/') . $value['school_master_id'] . "/" . $value['form_data_collection_id'] . '"><i class="ti ti-eye" title="Preview Id"></i>';
+                        if (in_array($role, ['Employee', 'ChannelPartner', "SuperAdmin", "Admin"])) {
+                            $row_value[$val['data']] .= '<a class="me-2 edit-from-data" href="javascript:void(0)" data-collection-id="' . $value['form_data_collection_id'] . '"><i class="ti ti-edit" title="Edit Data"></i>';
+                        }
+                    } else {
+                        $row_value[$val['data']] .= '<a  class="me-2 edit-image-data" href="javascript:void(0)" data-collection-id="' . $value['form_data_collection_id'] . '"><i ' . $extra_style . ' class="ti ti-photo-up" title="Edit Data"></i>';
                     }
                 }
                 $row_value['added_date'] = getDefaultDateTime($value['added_date']);
                 $row_value['card_generated'] = $value['card_generated'];
-                
 
-                
+
+
             }
             $data[] = $row_value;
             # code...
         }
 
         $data["data"] = $data;
-        
-        $total_record = $this->Form_model->getFormDetails([], $post_data["search"],$school_id,$row_search);
+
+        $total_record = $this->Form_model->getFormDetails([], $post_data["search"], $school_id, $row_search);
         $data["recordsTotal"] = count($total_record);
         $data["recordsFiltered"] = count($total_record);
         echo json_encode($data);
         exit();
     }
 
-    public function download_images(){
+    public function download_images()
+    {
         $from_data_collection_id = $this->uri->segment(2);
         $from_data_collection_data = $this->Form_model->getFormCollectionData($from_data_collection_id);
-        $form_details = json_decode($from_data_collection_data['form_data'],TRUE);
+        $form_details = json_decode($from_data_collection_data['form_data'], TRUE);
         $form_data = $this->Form_model->getFormJsonData($from_data_collection_data['school_master_id']);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
         $column = [];
         $file_column_exist = false;
         $images = [];
         foreach ($from_field as $key => $value) {
-            $value = json_decode($value,TRUE);
-            if($value['form_type'] == "file"){
-                if($form_details[$value['form_name']] != ""){
+            $value = json_decode($value, TRUE);
+            if ($value['form_type'] == "file") {
+                if ($form_details[$value['form_name']] != "") {
                     $images[] = $form_details[$value['form_name']];
                 }
             }
@@ -707,7 +718,7 @@ class Form extends MY_Controller {
 
 
         // Define the ZIP file name
-        $zipFile = $temp_dir . "images_".$form_data['url'].date("_d_m_Y_H_i_s").".zip";
+        $zipFile = $temp_dir . "images_" . $form_data['url'] . date("_d_m_Y_H_i_s") . ".zip";
         error_log("ZIP path: " . $zipFile);
 
         // Create a new ZIP archive
@@ -755,36 +766,37 @@ class Form extends MY_Controller {
 
 
     }
-    public function download_all_images(){
+    public function download_all_images()
+    {
         $school_id = $this->uri->segment(2);
         $get_data = $this->input->get();
         $selected_ids = isset($get_data['selected_ids']) ? base64_decode($get_data['selected_ids']) : "";
-        $from_data_collection_data = $this->Form_model->getSchoolFormCollectionData($school_id,0,$selected_ids);
+        $from_data_collection_data = $this->Form_model->getSchoolFormCollectionData($school_id, 0, $selected_ids);
         $form_data = $this->Form_model->getFormJsonData($school_id);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
         $images_arr = [];
-        
+
         foreach ($from_data_collection_data as $ke => $val) {
-            $form_details = json_decode($val['form_data'],TRUE);
-           
+            $form_details = json_decode($val['form_data'], TRUE);
+
             $images = [];
             foreach ($from_field as $key => $value) {
-                 
-                $value = json_decode($value,TRUE);
-                if($value['form_type'] == "file"){
-                    if($form_details[$value['form_name']] != ""){
+
+                $value = json_decode($value, TRUE);
+                if ($value['form_type'] == "file") {
+                    if ($form_details[$value['form_name']] != "") {
                         $images[] = $form_details[$value['form_name']];
                     }
-                   
+
                 }
             }
             $images_arr[$val['sr_no']] = $images;
         }
-       
 
 
-        
+
+
         $this->load->helper('url');
         $this->load->helper('file');
 
@@ -801,8 +813,8 @@ class Form extends MY_Controller {
 
 
         // Define the ZIP file name
-        $zipFile = $temp_dir . "all_images".$form_data['url'].date("_d_m_Y_H_i_s").".zip";
-       
+        $zipFile = $temp_dir . "all_images" . $form_data['url'] . date("_d_m_Y_H_i_s") . ".zip";
+
         // Create a new ZIP archive
         if (!is_dir(dirname($zipFile))) {
             mkdir(dirname($zipFile), 0777, true);
@@ -812,7 +824,7 @@ class Form extends MY_Controller {
         if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
             die("Could not create ZIP file");
         }
-       
+
 
         foreach ($images_arr as $key => $value) {
 
@@ -842,9 +854,9 @@ class Form extends MY_Controller {
         if (file_exists($zipFile)) {
             // Set headers to force download
             header('Content-Type: application/zip');
-            header('Content-Disposition: attachment; filename="all_images_'.$form_data['url'].date("_d-m-Y_H-i").'.zip"');
+            header('Content-Disposition: attachment; filename="all_images_' . $form_data['url'] . date("_d-m-Y_H-i") . '.zip"');
             header('Content-Length: ' . filesize($zipFile));
-            
+
             ob_clean();
             flush();
             readfile($zipFile);
@@ -857,10 +869,10 @@ class Form extends MY_Controller {
 
 
     }
-    
+
     public function url()
     {
-        
+
         $fields = [
             'name',
             'father_name',
@@ -868,12 +880,12 @@ class Form extends MY_Controller {
             'gender',
             'date_of_birth'
         ];
-        
+
         $data['form_fields'] = $fields;
         // pr("ok");
-        $this->smarty->loadView('url_info_form.tpl', $data,'No','No');
+        $this->smarty->loadView('url_info_form.tpl', $data, 'No', 'No');
     }
-    
+
 
     public function generateFromData()
     {
@@ -886,7 +898,7 @@ class Form extends MY_Controller {
         $url = $post_data['url'];
         $status = "Active";
         $msg_mobile = $post_data['mobile_number'];
-        if($user_role == "ChannelPartner"){
+        if ($user_role == "ChannelPartner") {
             $name = $school_data['school_name'];
             $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
             $str = preg_replace('/\s+/', '_', $str);
@@ -897,40 +909,42 @@ class Form extends MY_Controller {
             $school_name = preg_replace('/\s+/', '_', $school_name);
             $school_name = strtoupper($school_name);
             // pr($name,1);
-            $post_data['url'] = $url = $name."_".$school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $post_data['url'] = $url = $name . "_" . $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
             $template_details = [
                 "school_name" => $school_name_val,
-                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "mobile" => "" . $school_data['school_contact_no'] . ", " . $post_data['mobile_number'] . "",
                 "channelPartner" => $school_data['school_name'],
+                "website" => ""
             ];
             $status = "PendingApproval";
             $msg_mobile = $this->session->userdata("user_mobile_number");
-            
-        }else{
+
+        } else {
             $form_heder_type = $form_heder_type == "office" ? "STAFF" : "STUDENT";
             $school_name_val = $this->input->post('name');
             $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
             $school_name = preg_replace('/\s+/', '_', $school_name);
             $school_name = strtoupper($school_name);
             // pr($name,1);
-            $post_data['url'] = $url = $school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $post_data['url'] = $url = $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
             $template_details = [
                 "school_name" => $school_name_val,
-                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
-                "channelPartner" => $school_data['school_name']
+                "mobile" => "" . $school_data['school_contact_no'] . ", " . $post_data['mobile_number'] . "",
+                "channelPartner" => $school_data['school_name'],
+                "website" => "www.bharatidcard.com"
             ];
         }
-        
+
         $school_master_data = $this->Form_model->checkDublicateUrl($post_data['url']);
         $school_master_data = is_valid_array($school_master_data) ? $school_master_data : [];
-        
-        
-        
-        if(count($school_master_data) == 0){
+
+
+
+        if (count($school_master_data) == 0) {
             $course_value = $post_data['course'];
             $section_value = $post_data['section'];
             $house_value = $post_data['house'];
-            $form_fileds = json_decode($post_data['form_fileds'],TRUE);
+            $form_fileds = json_decode($post_data['form_fileds'], TRUE);
             $fields = $this->Form_model->getFieldData();
             $fields_id_wise = [];
             foreach ($fields as $key => $value) {
@@ -938,17 +952,17 @@ class Form extends MY_Controller {
             }
             $form_field_data = [];
             foreach ($form_fileds as $key => $value) {
-                if($fields_id_wise[$value['field_id']]['form_name'] == "course" || $fields_id_wise[$value['field_id']]['form_name'] == "class"){
+                if ($fields_id_wise[$value['field_id']]['form_name'] == "course" || $fields_id_wise[$value['field_id']]['form_name'] == "class") {
                     $fields_id_wise[$value['field_id']]['form_value'] = $course_value;
-                }else if($fields_id_wise[$value['field_id']]['form_name'] == "section"){
+                } else if ($fields_id_wise[$value['field_id']]['form_name'] == "section") {
                     $fields_id_wise[$value['field_id']]['form_value'] = $section_value;
-                }else if($fields_id_wise[$value['field_id']]['form_name'] == "house"){
+                } else if ($fields_id_wise[$value['field_id']]['form_name'] == "house") {
                     $fields_id_wise[$value['field_id']]['form_value'] = $house_value;
                 }
 
                 $row = [
                     "required" => $value['requied'],
-                    "field_data" => json_encode($fields_id_wise[$value['field_id']],TRUE)
+                    "field_data" => json_encode($fields_id_wise[$value['field_id']], TRUE)
                 ];
                 array_push($form_field_data, $row);
             }
@@ -956,14 +970,14 @@ class Form extends MY_Controller {
             /* collage logo */
             $upload_error_msg = [];
             $school_image = "";
-            if($user_role == "School"){
+            if ($user_role == "School") {
                 $school_image = $school_data['school_logo'];
                 $post_data['channel_patner_id'] = $this->session->userdata('user_id');
                 $status = "PendingApproval";
-            }else{
+            } else {
                 $profileImageData = $_FILES["image"]["name"] != "" ? $_FILES["image"] : [];
                 $config["upload_path"] = "public/uploads/school_image/";
-                $config["allowed_types"] = "jpg|jpeg|png|bmp|heic"; 
+                $config["allowed_types"] = "jpg|jpeg|png|bmp|heic";
                 $this->load->library("upload", $config);
                 $this->upload->initialize($config);
                 if (!empty($profileImageData)) {
@@ -974,23 +988,25 @@ class Form extends MY_Controller {
                         $upload_error = 1;
                     } else {
                         $upload_data = $this->upload->data();
-                        $school_image = "public/uploads/school_image/".$upload_data['file_name'];
+                        $school_image = "public/uploads/school_image/" . $upload_data['file_name'];
                     }
                 }
             }
 
             $template_image = "";
-        if (!( (!empty($upload_error_msg) && count($upload_error_msg) > 0) || 
-            (!empty($template_error_msg) && count($template_error_msg) > 0))) {
+            if (
+                !((!empty($upload_error_msg) && count($upload_error_msg) > 0) ||
+                    (!empty($template_error_msg) && count($template_error_msg) > 0))
+            ) {
                 $template_details['school_image'] = $school_image;
                 $template_details['form_type'] = $form_type;
-                if($user_role == "ChannelPartner" ){
-                    $template_image = $this->generateFormChanelPartTemplate($template_details); 
-                }else{
-                    $template_image = $this->generateFormSchoolTemplate($template_details); 
+                if ($user_role == "ChannelPartner") {
+                    $template_image = $this->generateFormChanelPartTemplate($template_details);
+                } else {
+                    $template_image = $this->generateFormSchoolTemplate($template_details);
                 }
             }
-            
+
             // /* template image */
             // $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
             // $config["upload_path"] = "public/uploads/form_template_img/";
@@ -1000,7 +1016,7 @@ class Form extends MY_Controller {
             // $this->upload->initialize($config);
             // $template_error_msg = [];
             // $template_image = [];
-            
+
             // if (!empty($profileImageData)) {
             //     if (!$this->upload->do_upload("template")) {
             //         $template_error_msg = $error = [
@@ -1014,7 +1030,7 @@ class Form extends MY_Controller {
             // }
 
             $ret_arr = [];
-            $msg ='Something went wrong';
+            $msg = 'Something went wrong';
             $success = 0;
             if (!empty($upload_error_msg) || !empty($template_error_msg)) {
                 $msg = '';
@@ -1024,48 +1040,48 @@ class Form extends MY_Controller {
                     $msg = $template_error_msg['error'];
                 }
                 $msg .= " Only jpg, jpeg, png, bmp, heic file type allowed";
-            }else {
+            } else {
                 $data = array(
-                        'name' => $this->input->post('name'),
-                        'image' => $school_image,
-                        'url' => $url,
-                        'form_type' => $form_type,
-                        "contact_person" => $post_data['contact_person'],
-                        "mobile_number" => $post_data['mobile_number'],
-                        "designation" => $post_data['designation'],
-                        "display_template" => $template_image,
-                        "course" => $post_data['course'],
-                        "section" => $post_data['section'],
-                        "house" => $post_data['house'],
-                        'from_field' => json_encode($form_field_data,TRUE),
-                        'added_date' => date("Y-m-d H:i:s"),
-                        'added_by' => $this->session->userdata('user_id'),
-                        "channel_patner_id" => $post_data['channel_patner_id'],
-                        "address" => $post_data['address'],
-                        "comment" => $post_data['comment'],
-                        "status" => $status
+                    'name' => $this->input->post('name'),
+                    'image' => $school_image,
+                    'url' => $url,
+                    'form_type' => $form_type,
+                    "contact_person" => $post_data['contact_person'],
+                    "mobile_number" => $post_data['mobile_number'],
+                    "designation" => $post_data['designation'],
+                    "display_template" => $template_image,
+                    "course" => $post_data['course'],
+                    "section" => $post_data['section'],
+                    "house" => $post_data['house'],
+                    'from_field' => json_encode($form_field_data, TRUE),
+                    'added_date' => date("Y-m-d H:i:s"),
+                    'added_by' => $this->session->userdata('user_id'),
+                    "channel_patner_id" => $post_data['channel_patner_id'],
+                    "address" => $post_data['address'],
+                    "comment" => $post_data['comment'],
+                    "status" => $status
                 );
                 $inser_query = $this->Form_model->insertSchoolData($data);
                 // pr($this->db->last_query(),1);
                 if ($inser_query) {
                     if ($inser_query) {
-                        if($status == "PendingApproval"){
-                            sent_link_generated($data['name'],$msg_mobile);
+                        if ($status == "PendingApproval") {
+                            sent_link_generated($data['name'], $msg_mobile);
                             $user_admin_data = $this->Form_model->get_user_admin_data();
                             $user_mobile_number = $user_admin_data['user_mobile_number'];
-                            sent_link_generated_admin($this->input->post('name'),$user_mobile_number);
+                            sent_link_generated_admin($this->input->post('name'), $user_mobile_number);
                         }
                         $success = 1;
                         $msg = 'School date added successfully.';
                     }
                 }
             }
-        }else{
+        } else {
             $success = 0;
             $msg = 'URL must be unique.';
         }
         $payment_qr = "";
-        if(in_array($user_role,["School","ChannelPartner"])){
+        if (in_array($user_role, ["School", "ChannelPartner"])) {
             $payment_qr = $this->config->item("linkPaymentQr");
         }
         $ret_arr['payment_qr'] = $payment_qr;
@@ -1077,9 +1093,9 @@ class Form extends MY_Controller {
 
     public function updateFromData()
     {
-        
+
         $post_data = $this->input->post();
-        $template_old = FCPATH.$post_data['template_old'];
+        $template_old = FCPATH . $post_data['template_old'];
         if (file_exists($template_old)) {
             unlink($template_old);
         }
@@ -1090,9 +1106,9 @@ class Form extends MY_Controller {
         $user_role = $this->session->userdata("role");
         $url = $post_data['url'];
         $user_role = $form_edit_val['user_role'];
-        $school_data = $user_role == "School" || $user_role == "ChannelPartner" ?  (array) json_decode($form_edit_val['extra_json']) : [];
-       
-        if($user_role == "ChannelPartner"){
+        $school_data = $user_role == "School" || $user_role == "ChannelPartner" ? (array) json_decode($form_edit_val['extra_json']) : [];
+
+        if ($user_role == "ChannelPartner") {
             $name = $school_data['school_name'];
             $str = preg_replace('/[^A-Za-z0-9 ]+/', '', $name);
             $str = preg_replace('/\s+/', '_', $str);
@@ -1103,124 +1119,124 @@ class Form extends MY_Controller {
             $school_name = preg_replace('/\s+/', '_', $school_name);
             $school_name = strtoupper($school_name);
             // pr($name,1);
-            $post_data['url'] = $url = $name."_".$school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $post_data['url'] = $url = $name . "_" . $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
             $template_details = [
                 "school_name" => $school_name_val,
-                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "mobile" => "" . $school_data['school_contact_no'] . ", " . $post_data['mobile_number'] . "",
                 "channelPartner" => $school_data['school_name'],
             ];
             // $post_data['channel_patner_id'] = $this->session->userdata('user_id');
-            
-        }else{
+
+        } else {
             $form_heder_type = $form_type == "office" ? "STAFF" : "STUDENT";
             $school_name_val = $this->input->post('name');
             $school_name = preg_replace('/[^A-Za-z0-9 ]+/', '', $school_name_val);
             $school_name = preg_replace('/\s+/', '_', $school_name);
             $school_name = strtoupper($school_name);
             // pr($name,1);
-            $post_data['url'] = $url = $school_name."_".$form_heder_type."_".date("d_M_Y_h_i_s_A");
+            $post_data['url'] = $url = $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
             $template_details = [
                 "school_name" => $school_name_val,
-                "mobile" => "".$school_data['school_contact_no'].", ".$post_data['mobile_number']."",
+                "mobile" => "" . $school_data['school_contact_no'] . ", " . $post_data['mobile_number'] . "",
                 "channelPartner" => $school_data['school_name']
             ];
         }
-       
 
-        if($user_role == "School"){
+
+        if ($user_role == "School") {
             $post_data['channel_patner_id'] = $this->session->userdata('user_id');
         }
 
         $course_value = $post_data['course'];
-            $section_value = $post_data['section'];
-            $house_value = $post_data['house'];
-            $form_fileds = json_decode($post_data['form_fileds'],TRUE);
-            $fields = $this->Form_model->getFieldData();
-            $fields_id_wise = [];
-            foreach ($fields as $key => $value) {
-                $fields_id_wise[$value['form_field_master_id']] = $value;
+        $section_value = $post_data['section'];
+        $house_value = $post_data['house'];
+        $form_fileds = json_decode($post_data['form_fileds'], TRUE);
+        $fields = $this->Form_model->getFieldData();
+        $fields_id_wise = [];
+        foreach ($fields as $key => $value) {
+            $fields_id_wise[$value['form_field_master_id']] = $value;
+        }
+        $form_field_data = [];
+        foreach ($form_fileds as $key => $value) {
+            if ($fields_id_wise[$value['field_id']]['form_name'] == "course" || $fields_id_wise[$value['field_id']]['form_name'] == "class") {
+                $fields_id_wise[$value['field_id']]['form_value'] = $course_value;
+            } else if ($fields_id_wise[$value['field_id']]['form_name'] == "section") {
+                $fields_id_wise[$value['field_id']]['form_value'] = $section_value;
+            } else if ($fields_id_wise[$value['field_id']]['form_name'] == "house") {
+                $fields_id_wise[$value['field_id']]['form_value'] = $house_value;
             }
-            $form_field_data = [];
-            foreach ($form_fileds as $key => $value) {
-                if($fields_id_wise[$value['field_id']]['form_name'] == "course" || $fields_id_wise[$value['field_id']]['form_name'] == "class"){
-                    $fields_id_wise[$value['field_id']]['form_value'] = $course_value;
-                }else if($fields_id_wise[$value['field_id']]['form_name'] == "section"){
-                    $fields_id_wise[$value['field_id']]['form_value'] = $section_value;
-                }else if($fields_id_wise[$value['field_id']]['form_name'] == "house"){
-                    $fields_id_wise[$value['field_id']]['form_value'] = $house_value;
-                }
 
-                $row = [
-                    "required" => $value['requied'],
-                    "field_data" => json_encode($fields_id_wise[$value['field_id']],TRUE)
+            $row = [
+                "required" => $value['requied'],
+                "field_data" => json_encode($fields_id_wise[$value['field_id']], TRUE)
+            ];
+            array_push($form_field_data, $row);
+        }
+
+        /* collage logo */
+        $profileImageData = $_FILES["image"]["name"] != "" ? $_FILES["image"] : [];
+        $config["upload_path"] = "public/uploads/school_image/";
+        $config["allowed_types"] = "jpg|jpeg|png|bmp|heic";
+        // $config["max_size"]       = 2048;  
+        // $config["encrypt_name"]   = TRUE;
+
+        $this->load->library("upload", $config);
+        $this->upload->initialize($config);
+        $upload_error_msg = [];
+        $school_image = "";
+
+        if (!empty($profileImageData)) {
+            if (!$this->upload->do_upload("image")) {
+                $upload_error_msg = $error = [
+                    "error" => $this->upload->display_errors(),
                 ];
-                array_push($form_field_data, $row);
+                $upload_error = 1;
+            } else {
+                $upload_data = $this->upload->data();
+                $school_image = "public/uploads/school_image/" . $upload_data['file_name'];
+
             }
+        } else {
+            $school_image = $post_data['image_old'];
+        }
 
-            /* collage logo */
-            $profileImageData = $_FILES["image"]["name"] != "" ? $_FILES["image"] : [];
-            $config["upload_path"]   = "public/uploads/school_image/";
-            $config["allowed_types"]  = "jpg|jpeg|png|bmp|heic";
-            // $config["max_size"]       = 2048;  
-            // $config["encrypt_name"]   = TRUE;
+        // /* template image */
+        // $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
+        // $config["upload_path"] = "public/uploads/form_template_img/";
+        // createFolder($config["upload_path"]);
+        // $config["allowed_types"] = "jpg|jpeg|png|bmp|heic";
+        // $this->load->library("upload", $config);
+        // $this->upload->initialize($config);
+        // $template_error_msg = [];
+        // $template_image = [];
 
-            $this->load->library("upload", $config);  
-            $this->upload->initialize($config);
-            $upload_error_msg = [];
-            $school_image = "";
+        // if (!empty($profileImageData)) {
+        //     if (!$this -> upload -> do_upload("template")) {
+        //         $template_error_msg = $error = ["error" => $this -> upload -> display_errors()];
+        //         $template_error = 1;
+        //     } else {
+        //         $template_data = $this -> upload -> data();
+        //         $template_image = "public/uploads/form_template_img/".$template_data['file_name'];
+        //     }
+        // } else {
+        //     $template_image = $post_data['template_old'];
+        // }
 
-            if (!empty($profileImageData)) {
-                if (!$this->upload->do_upload("image")) {
-                    $upload_error_msg = $error = [
-                        "error" => $this->upload->display_errors(),
-                    ];
-                    $upload_error = 1;
-                } else {
-                    $upload_data = $this->upload->data();
-                    $school_image = "public/uploads/school_image/".$upload_data['file_name'];
-                   
-                }
-            }else{
-                $school_image = $post_data['image_old'];
+        $template_image = "";
+        if ((!(count($upload_error_msg) > 0) || (is_array($template_error_msg) && count($template_error_msg) > 0))) {
+            $template_details['school_image'] = $school_image;
+            $template_details['form_type'] = $form_type;
+            if ($user_role == "ChannelPartner") {
+                $template_image = $this->generateFormChanelPartTemplate($template_details);
+            } else {
+                $template_image = $this->generateFormSchoolTemplate($template_details);
             }
-           
-            // /* template image */
-            // $profileImageData = $_FILES["template"]["name"] != "" ? $_FILES["template"] : [];
-            // $config["upload_path"] = "public/uploads/form_template_img/";
-            // createFolder($config["upload_path"]);
-            // $config["allowed_types"] = "jpg|jpeg|png|bmp|heic";
-            // $this->load->library("upload", $config);
-            // $this->upload->initialize($config);
-            // $template_error_msg = [];
-            // $template_image = [];
-            
-            // if (!empty($profileImageData)) {
-            //     if (!$this -> upload -> do_upload("template")) {
-            //         $template_error_msg = $error = ["error" => $this -> upload -> display_errors()];
-            //         $template_error = 1;
-            //     } else {
-            //         $template_data = $this -> upload -> data();
-            //         $template_image = "public/uploads/form_template_img/".$template_data['file_name'];
-            //     }
-            // } else {
-            //     $template_image = $post_data['template_old'];
-            // }
+            $template_old = FCPATH . $post_data['template_old'];
 
-            $template_image = "";
-            if((!(count($upload_error_msg) > 0) || (is_array($template_error_msg) && count($template_error_msg) > 0))){
-                $template_details['school_image'] = $school_image;
-                $template_details['form_type'] = $form_type;
-                if($user_role == "ChannelPartner" ){
-                    $template_image = $this->generateFormChanelPartTemplate($template_details); 
-                }else{
-                    $template_image = $this->generateFormSchoolTemplate($template_details); 
-                }
-                $template_old = FCPATH.$post_data['template_old'];
-               
-                if (file_exists($template_old)) {
-                    unlink($template_old);
-                }
+            if (file_exists($template_old)) {
+                unlink($template_old);
             }
+        }
 
         $ret_arr = [];
         $msg = 'Something went wrong';
@@ -1250,8 +1266,8 @@ class Form extends MY_Controller {
                 'address' => $post_data['address'],
                 'comment' => $post_data['comment']
             );
-           
-            $affected_row = $this -> Form_model -> updateSchoolData(
+
+            $affected_row = $this->Form_model->updateSchoolData(
                 $data,
                 $post_data['school_id']
             );
@@ -1265,18 +1281,19 @@ class Form extends MY_Controller {
         $ret_arr['success'] = $success;
         echo json_encode($ret_arr);
     }
-    
+
     /* daynamic form creation */
-     public function form(){
+    public function form()
+    {
         $page_url = $this->uri->segment(2);
         $page_url = base64_decode($page_url);
         $form_data = $this->Form_model->getFormJson($page_url);
         $data = [];
-        if(is_valid_array($form_data) && $form_data['status'] == "Active" && $form_data['is_delete'] == 0){
-            $form_fields = json_decode($form_data['from_field'],TRUE);
+        if (is_valid_array($form_data) && $form_data['status'] == "Active" && $form_data['is_delete'] == 0) {
+            $form_fields = json_decode($form_data['from_field'], TRUE);
             foreach ($form_fields as $key => $value) {
-                $fields = json_decode($value['field_data'],TRUE);
-                if($fields['form_type'] == "radio" || $fields['form_type'] == "drop_down"){
+                $fields = json_decode($value['field_data'], TRUE);
+                if ($fields['form_type'] == "radio" || $fields['form_type'] == "drop_down") {
                     $fields['form_value'] = explode(",", $fields['form_value']);
                 }
                 $form_fields[$key]['field_data'] = $fields;
@@ -1284,28 +1301,29 @@ class Form extends MY_Controller {
             $data = [];
             $data['form_fields'] = $form_fields;
             $data['form_data'] = $form_data;
-            $this->smarty->loadView('url_info_form.tpl', $data,'No','No');
-        }else{
+            $this->smarty->loadView('url_info_form.tpl', $data, 'No', 'No');
+        } else {
             $data = [];
-            $this->smarty->loadView('page_not_found.tpl', $data,'No','No');
+            $this->smarty->loadView('page_not_found.tpl', $data, 'No', 'No');
         }
-        
+
     }
-    public function submit_form(){
-        
+    public function submit_form()
+    {
+
         $post_data = $this->input->post();
         $form_data = $this->Form_model->getFormJson($post_data['from_url']);
-        $form_fields = json_decode($form_data['from_field'],TRUE);
+        $form_fields = json_decode($form_data['from_field'], TRUE);
         $image_arr = [];
-        
+
         $form_data_collection_count = $this->Form_model->getSchoolFormCollectionDataCount($post_data['matser_id']);
-        $form_data_collection_count_val = $form_data_collection_count['count'] > 0 ? $form_data_collection_count['count']+1 : 1;
+        $form_data_collection_count_val = $form_data_collection_count['count'] > 0 ? $form_data_collection_count['count'] + 1 : 1;
         // pr($form_data_collection_count,1);
         $folderPath = "public/uploads/data_collection_img/" . $post_data['from_url'];
         if (!is_dir($folderPath) && $folderPath != "") {
             mkdir($folderPath, 0777, true);
         }
-       
+
         $upload_error_msg = [];
         foreach ($_FILES as $key => $value) {
 
@@ -1313,10 +1331,10 @@ class Form extends MY_Controller {
             $fileName = $_FILES[$key]['name'];
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-            $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
+            $_FILES[$key]["name"] = $post_data['from_url'] . "_" . $form_data_collection_count_val . "." . $fileExtension;
 
-            $uploadFolderPath = $folderPath."/".$key;
-            
+            $uploadFolderPath = $folderPath . "/" . $key;
+
             if (!is_dir($uploadFolderPath) && $uploadFolderPath != "") {
                 mkdir($uploadFolderPath, 0777, true);
             }
@@ -1413,7 +1431,7 @@ class Form extends MY_Controller {
         }
 
         // pr($image_arr,1);
-        
+
         // foreach ($_FILES as $key => $value) {
         //     // Get the uploaded image
         //     $profileImageData = $_FILES[$key]["name"] != "" ? $_FILES[$key] : [];
@@ -1432,7 +1450,7 @@ class Form extends MY_Controller {
         //     $this->load->library("upload", $config);
         //     $this->upload->initialize($config);
         //     if (!empty($profileImageData)) {
-                
+
         //         if (!$this->upload->do_upload($key)) {
         //             // If upload fails, store the error message
         //             $error = $this->upload->display_errors('', '');
@@ -1484,38 +1502,38 @@ class Form extends MY_Controller {
 
         $form_data_json = [];
         foreach ($form_fields as $key => $value) {
-            $field_data = json_decode($value['field_data'],TRUE);
-            if($field_data['form_type'] != "file"){
+            $field_data = json_decode($value['field_data'], TRUE);
+            if ($field_data['form_type'] != "file") {
                 $original_name = $field_data['form_name'];
                 $field_data['form_name'] = str_replace('.', '_', $field_data['form_name']);
                 $field_value = $post_data[$field_data['form_name']] != "" ? $post_data[$field_data['form_name']] : "";
-                $field_value = $field_data['prefix'] != "" ? $field_data['prefix']." ".$field_value : $field_value;
+                $field_value = $field_data['prefix'] != "" ? $field_data['prefix'] . " " . $field_value : $field_value;
                 $form_data_json[$original_name] = $field_value;
-            }else{
+            } else {
                 $form_data_json[$field_data['form_name']] = $image_arr[$field_data['form_name']] != "" ? $image_arr[$field_data['form_name']] : "";
             }
         }
         $msg = "Something went wrong";
         $success = 0;
-        if (count($upload_error_msg) > 0 ) {
+        if (count($upload_error_msg) > 0) {
             $msg = $upload_error_msg["error"];
             // $msg .= "Only jpg,jpeg,png,bmp,heic file type allowed";
         } else {
             $insert_data = [
                 "school_master_id" => $post_data['matser_id'],
                 "sr_no" => $form_data_collection_count_val,
-                "form_data" => json_encode($form_data_json,TRUE),
+                "form_data" => json_encode($form_data_json, TRUE),
                 "added_date" => date("Y-m-d H:i:s")
             ];
             $inser_query = $this->Form_model->insertFormData($insert_data);
             if ($inser_query) {
                 if ($inser_query) {
                     $success = 1;
-                   $msg = 'Form submitted successfully with <b style="font-size:20px">Sr. no.: ' . $form_data_collection_count_val . '</b>';
+                    $msg = 'Form submitted successfully with <b style="font-size:20px">Sr. no.: ' . $form_data_collection_count_val . '</b>';
                 }
             }
         }
-        
+
         $ret_arr['messages'] = $msg;
         $ret_arr['success'] = $success;
         echo json_encode($ret_arr);
@@ -1524,7 +1542,7 @@ class Form extends MY_Controller {
 
     public function generate_id_card_pdf()
     {
-        
+
         $school_id = $this->uri->segment(2);
         $data = $this->Form_model->getSchoolFormCollectionData($school_id);
         // pr($data,1);
@@ -1621,7 +1639,7 @@ class Form extends MY_Controller {
             "width" => "8%",
             "className" => "dt-center",
         ];
-        
+
         $data["data"] = $column;
         $data["is_searching_enable"] = true;
         $data["is_paging_enable"] = true;
@@ -1634,15 +1652,16 @@ class Form extends MY_Controller {
             'public/assets/images/images/no_data_found_new.png" height="150" width="150"><br> No Employee data found..!</div>';
         $data["is_top_searching_enable"] = true;
         $data["sorting_column"] = json_encode([[11, 'desc']]);
-        $data["page_length_arr"] = [[20,100,500,1000,2000,2500,3000,-1], [20,100,500,1000,2000,2500,3000,'All']];
+        $data["page_length_arr"] = [[20, 100, 500, 1000, 2000, 2500, 3000, -1], [20, 100, 500, 1000, 2000, 2500, 3000, 'All']];
         $data["admin_url"] = base_url();
         $data["base_url"] = base_url();
-        $this->smarty->loadView('form_field_listing.tpl', $data,'Yes','Yes');
+        $this->smarty->loadView('form_field_listing.tpl', $data, 'Yes', 'Yes');
     }
 
-    public function formFieldListingData(){
+    public function formFieldListingData()
+    {
         $post_data = $this->input->post();
-        
+
         $column_index = array_column($post_data["columns"], "data");
         $order_by = "";
         foreach ($post_data["order"] as $key => $val) {
@@ -1657,7 +1676,7 @@ class Form extends MY_Controller {
         $condition_arr["start"] = $post_data["start"];
         $condition_arr["length"] = $post_data["length"];
         $base_url = $this->config->item("base_url");
-        $data = $this->Form_model->getFieldDetails($condition_arr,$post_data["search"]);
+        $data = $this->Form_model->getFieldDetails($condition_arr, $post_data["search"]);
         foreach ($data as $key => $val) {
             $data[$key]['prefix'] = display_no_character($val['prefix']);
             $data[$key]['field_type'] = display_no_character($val['field_type']);
@@ -1668,16 +1687,16 @@ class Form extends MY_Controller {
             $data[$key]['added_date'] = $val['added_date'] != "" ? defaultDateFormat(date("Y-m-d", strtotime($val['added_date']))) : display_no_character();
             $row_data = base64_encode(json_encode($val));
             $data[$key]['action'] = '
-                <span class="edit-field-row" title="Edit" data-row="'.$row_data.'">
+                <span class="edit-field-row" title="Edit" data-row="' . $row_data . '">
                     <i class="ti ti-edit"></i>
                 </span>
-                <span class="delete-feild" title="Delete" data_id="'.$val['form_field_master_id'].'">
+                <span class="delete-feild" title="Delete" data_id="' . $val['form_field_master_id'] . '">
                     <i class="ti ti-trash"></i>
                 </span>
             ';
         }
-        
-        
+
+
         $data["data"] = $data;
         // pr($data,1);
         $total_record = $this->Form_model->getFieldDetailsCount([], $post_data["search"]);
@@ -1686,7 +1705,8 @@ class Form extends MY_Controller {
         echo json_encode($data);
         exit();
     }
-    public function delete_form_field(){
+    public function delete_form_field()
+    {
         $post_data = $this->input->post();
         $this->Form_model->deleteFieldMasterRow($post_data['data_id']);
         $ret_arr['messages'] = "Record deleted successfully.";
@@ -1695,12 +1715,13 @@ class Form extends MY_Controller {
         exit();
     }
 
-    public function addUpdateFormField(){
+    public function addUpdateFormField()
+    {
         $post_data = $this->input->post();
         $id = $post_data['id'];
         $msg = "Something went wrong";
         $success = 0;
-        if($id > 0){
+        if ($id > 0) {
             $update_date = [
                 "form_title" => $post_data['form_title'],
                 "form_name" => preg_replace("/[^a-zA-Z0-9_]/", "", $post_data['form_name']),
@@ -1712,12 +1733,12 @@ class Form extends MY_Controller {
                 'updated_date' => date("Y-m-d H:i:s"),
                 'updated_by' => $this->session->userdata('user_id')
             ];
-            $inser_query = $this->Form_model->updateFormField($update_date,$id);
+            $inser_query = $this->Form_model->updateFormField($update_date, $id);
             if ($inser_query) {
-                    $success = 1;
-                    $msg = 'Form field updated successfully.';
+                $success = 1;
+                $msg = 'Form field updated successfully.';
             }
-        }else{
+        } else {
             $insert_date = [
                 "form_title" => $post_data['form_title'],
                 "form_name" => preg_replace("/[^a-zA-Z0-9_]/", "", $post_data['form_name']),
@@ -1731,8 +1752,8 @@ class Form extends MY_Controller {
             ];
             $inser_query = $this->Form_model->insertFormField($insert_date);
             if ($inser_query) {
-                    $success = 1;
-                    $msg = 'Form field added successfully.';
+                $success = 1;
+                $msg = 'Form field added successfully.';
             }
         }
 
@@ -1742,52 +1763,53 @@ class Form extends MY_Controller {
         exit();
     }
 
-    public function download_all_ids(){
-        
+    public function download_all_ids()
+    {
+
         // ini_set('display_errors', 1);
         // ini_set('display_startup_errors', 1);
         // error_reporting(E_ALL);  
         $school_id = $this->uri->segment(2);
-        
+
         $form_data_collection_id = $this->uri->segment(3) > 0 ? $this->uri->segment(3) : 0;
         $get_data = $this->input->get();
         $selected_ids = isset($get_data['selected_ids']) ? base64_decode($get_data['selected_ids']) : "";
-        $from_data_collection_data = $this->Form_model->getSchoolFormCollectionData($school_id,$form_data_collection_id,$selected_ids);
+        $from_data_collection_data = $this->Form_model->getSchoolFormCollectionData($school_id, $form_data_collection_id, $selected_ids);
         $form_data = $this->Form_model->getFormJsonData($school_id);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
         $id_card_data = [];
         $data_collection = [];
         $arry_key = -1;
-        
-        
+
+
         foreach ($from_data_collection_data as $ke => $val) {
-            $form_details = json_decode($val['form_data'],TRUE);
+            $form_details = json_decode($val['form_data'], TRUE);
             $image_value = [];
             $other_data = [];
             foreach ($from_field as $key => $value) {
-                $value = json_decode($value,TRUE);
+                $value = json_decode($value, TRUE);
                 $field_name_arr[] = $value['form_name'];
-                if($value['form_type'] == "file" && $value['form_name'] == "image"){
-                    if($form_details[$value['form_name']] != ""){
+                if ($value['form_type'] == "file" && $value['form_name'] == "image") {
+                    if ($form_details[$value['form_name']] != "") {
                         $image_value = base_url($form_details[$value['form_name']]);
                     }
-                }else{
-                    if($value['field_type'] == "Date"){
+                } else {
+                    if ($value['field_type'] == "Date") {
                         $value_ret = $form_details[$value['form_name']] != "" ? defaultDateFormat($form_details[$value['form_name']]) : display_no_character($form_details[$value['form_name']]);
-                    }else{
+                    } else {
                         $value_ret = $form_details[$value['form_name']];
                     }
-                        $other_data[] = [
-                            "key" => $value['form_name'],
-                            "value" => display_no_character($value_ret)
-                        ]; 
-                        $fieldMapping['<%$'.$value['form_name'].'%>'] = $value['form_name'];
-                    }
+                    $other_data[] = [
+                        "key" => $value['form_name'],
+                        "value" => display_no_character($value_ret)
+                    ];
+                    $fieldMapping['<%$' . $value['form_name'] . '%>'] = $value['form_name'];
+                }
             }
             $fieldMapping['<%$image%>'] = 'image';
             $fieldMapping['<%$sr_no%>'] = 'sr_no';
-            if($ke % 2 == 0){
+            if ($ke % 2 == 0) {
                 $arry_key += 1;
             }
             // if(array)
@@ -1797,63 +1819,65 @@ class Form extends MY_Controller {
                 "other_data" => $other_data
             ];
         }
-       // testing starts
+        // testing starts
         $design_data = $this->Form_model->getIdCardFieldComp($school_id);
-        
-        if(is_array($design_data) && count($design_data) > 0){
-            $fieldsConfig = json_decode($design_data['design_data'],true);
-            $config_arr = array_column($fieldsConfig,'type');
-            $image_index = array_search('image',$config_arr);
-            $image_height = $fieldsConfig[$image_index]['height'] .'px';
-            $image_width = $fieldsConfig[$image_index]['width'].'px';
+
+        if (is_array($design_data) && count($design_data) > 0) {
+            $fieldsConfig = json_decode($design_data['design_data'], true);
+            $config_arr = array_column($fieldsConfig, 'type');
+            $image_index = array_search('image', $config_arr);
+            $image_height = $fieldsConfig[$image_index]['height'] . 'px';
+            $image_width = $fieldsConfig[$image_index]['width'] . 'px';
             $students = [];
             $chuck_data = $design_data['col_per_row'];
-        
+
             foreach ($id_card_data as $row) {
                 foreach ($row as $student) {
                     // Create key-value pairs for student data
                     $studentData = [];
-                    $student['other_data'][]= ["key" => "sr_no" ,"value" => $student['sr_no']];
+                    $student['other_data'][] = ["key" => "sr_no", "value" => $student['sr_no']];
                     foreach ($student['other_data'] as $item) {
                         $studentData[$item['key']] = $item['value'];
-                        $studentData['image'] = '<img style="object-fit: contain; height: '.$image_height.'; width: '.$image_width.';" src="'.$student['image'].'">';
+                        $studentData['image'] = '<img style="object-fit: contain; height: ' . $image_height . '; width: ' . $image_width . ';" src="' . $student['image'] . '">';
                     }
                     $students[] = $studentData;
                 }
             }
-            $tem_pte = ['fieldsConfig' => $fieldsConfig,
+            $tem_pte = [
+                'fieldsConfig' => $fieldsConfig,
                 'students' => array_chunk($students, $chuck_data),
                 'fieldMapping' => $fieldMapping,
-                'backgroundImage' => base_url('/public/design_backgrounds/'.$design_data['background_image']),
+                'backgroundImage' => base_url('/public/design_backgrounds/' . $design_data['background_image']),
             ];
             $tem_pte['width'] = $design_data['width'];
             $tem_pte['height'] = $design_data['height'];
             $html = $this->smarty->fetch('new_pdf_generate.tpl', $tem_pte, TRUE);
             $data['id_card_data'] = $id_card_data;
 
-            $file_name = "id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";
+            $file_name = "id_cards_" . $form_data['url'] . date("_d-m-Y_H-i") . ".pdf";
             $file_path = FCPATH . 'public/card_designs/design_' . uniqid() . '.html';
             if (!is_dir(dirname($file_path))) {
                 mkdir(dirname($file_path), 0755, true);
             }
             write_file($file_path, $html);
-            if($form_data_collection_id > 0){
-                $file_name ="id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";;
+            if ($form_data_collection_id > 0) {
+                $file_name = "id_cards_" . $form_data['url'] . date("_d-m-Y_H-i") . ".pdf";
+                ;
             }
-            
+
             // $html = $this->smarty->fetch('pdf_generate.tpl', $data, TRUE);
             // $this->generatePdf($html,"D",$file_name,"Normal");
-            
+
             $this->generatePdfWithDom($html);
-        }else{
+        } else {
             $students = [];
             $chuck_data = $design_data['col_per_row'];
             $from_field_name = [];
             foreach ($from_field as $key => $value) {
-                $value = json_decode($value,TRUE);
+                $value = json_decode($value, TRUE);
                 $from_field_name[$value['form_name']] = $value['form_title'];
             }
-            
+
             foreach ($id_card_data as $row) {
                 foreach ($row as $student) {
                     $other_data = [];
@@ -1866,48 +1890,50 @@ class Form extends MY_Controller {
                     $students[] = $student;
                 }
             }
-            if($form_data_collection_id > 0){
-                $file_name ="id_cards_".$form_data['url'].date("_d-m-Y_H-i").".pdf";;
+            if ($form_data_collection_id > 0) {
+                $file_name = "id_cards_" . $form_data['url'] . date("_d-m-Y_H-i") . ".pdf";
+                ;
             }
-           
-            $this->generateStudentIdCard($students,$form_data,$file_name);
-            
+
+            $this->generateStudentIdCard($students, $form_data, $file_name);
+
         }
     }
-    public function preview_id_card(){
+    public function preview_id_card()
+    {
         $school_id = $this->uri->segment(2);
         $form_data_collection_id = $this->uri->segment(3) > 0 ? $this->uri->segment(3) : 0;
-        $from_data_collection_data = $this->Form_model->getSchoolFormCollectionData($school_id,$form_data_collection_id);
+        $from_data_collection_data = $this->Form_model->getSchoolFormCollectionData($school_id, $form_data_collection_id);
         $form_data = $this->Form_model->getFormJsonData($school_id);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
         $id_card_data = [];
         $data_collection = [];
         $arry_key = -1;
 
         foreach ($from_data_collection_data as $ke => $val) {
-            $form_details = json_decode($val['form_data'],TRUE);
+            $form_details = json_decode($val['form_data'], TRUE);
             $image_value = [];
             $other_data = [];
             foreach ($from_field as $key => $value) {
-                $value = json_decode($value,TRUE);
-                if($value['form_type'] == "file"){
-                    if($form_details[$value['form_name']] != "" && $value['form_name'] == "image"){
+                $value = json_decode($value, TRUE);
+                if ($value['form_type'] == "file") {
+                    if ($form_details[$value['form_name']] != "" && $value['form_name'] == "image") {
                         $image_value = base_url($form_details[$value['form_name']]);
                     }
-                }else{
-                    if($value['field_type'] == "Date"){
+                } else {
+                    if ($value['field_type'] == "Date") {
                         $value_ret = $form_details[$value['form_name']] != "" ? defaultDateFormat($form_details[$value['form_name']]) : display_no_character($form_details[$value['form_name']]);
-                    }else{
+                    } else {
                         $value_ret = $form_details[$value['form_name']];
                     }
-                        $other_data[] = [
-                            "key" => $value['form_title'],
-                            "value" => display_no_character($value_ret)
-                        ]; 
-                    }
+                    $other_data[] = [
+                        "key" => $value['form_title'],
+                        "value" => display_no_character($value_ret)
+                    ];
+                }
             }
-            if($ke % 2 == 0){
+            if ($ke % 2 == 0) {
                 $arry_key += 1;
             }
             // if(array)
@@ -1921,20 +1947,21 @@ class Form extends MY_Controller {
         $data['type'] = "Preview";
         $html = $this->smarty->fetch('pdf_generate.tpl', $data, TRUE);
         $file_name = "id_card.pdf";
-        $this->generatePdf($html,"I",$file_name,"Preview");
+        $this->generatePdf($html, "I", $file_name, "Preview");
     }
-    public function generatePdf($html_content = "",$type="D",$file_name="id_card.pdf",$sizeType){
+    public function generatePdf($html_content = "", $type = "D", $file_name = "id_card.pdf", $sizeType)
+    {
         ob_start();
         require_once APPPATH . 'libraries/Pdf1.php';
-        if($sizeType == "Preview"){
-            $width = 110; 
+        if ($sizeType == "Preview") {
+            $width = 110;
             $height = 110;
             $size = array($width, $height);
-        }else{
+        } else {
             $size = "A4";
         }
-        
-        $pdf = new Pdf1('P', 'mm',$size, true, 'UTF-8', false,'',0,0,0, 0);
+
+        $pdf = new Pdf1('P', 'mm', $size, true, 'UTF-8', false, '', 0, 0, 0, 0);
 
         $pdf->SetMargins(-5, 0, 0, 0);
 
@@ -1944,51 +1971,52 @@ class Form extends MY_Controller {
 
         // set default monospaced font
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-        
+
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
 
-        
+
 
         // set image scale factor
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
         $pdf->AddPage(); // Left, Top, Right margins
-        $pdf->SetAutoPageBreak(TRUE, 0); 
-        
+        $pdf->SetAutoPageBreak(TRUE, 0);
+
 
         $pdf->writeHTMLCell(0, 0, '', '', $html_content, 0, 0, 0, true, '', true);
         // $pdf->Output("id_card_fixed.pdf", 'D');
 
-            $pdf->Output($file_name, $type);
-             ob_end_flush();
-       
-        
-       
-    } 
+        $pdf->Output($file_name, $type);
+        ob_end_flush();
 
-    public function form_data_edit(){
+
+
+    }
+
+    public function form_data_edit()
+    {
         $post_data = $this->input->post();
         $form_data = $this->Form_model->getFormCollectionEditData($post_data['collection_id']);
         // pr($form_data,1);
         $data = [];
         $prefix_data_arr = [];
-        if(is_valid_array($form_data)){
-            $form_fields = json_decode($form_data['from_field'],TRUE);
+        if (is_valid_array($form_data)) {
+            $form_fields = json_decode($form_data['from_field'], TRUE);
             foreach ($form_fields as $key => $value) {
-                $fields = json_decode($value['field_data'],TRUE);
-                if($fields['form_type'] == "radio" || $fields['form_type'] == "drop_down"){
+                $fields = json_decode($value['field_data'], TRUE);
+                if ($fields['form_type'] == "radio" || $fields['form_type'] == "drop_down") {
                     $fields['form_value'] = explode(",", $fields['form_value']);
                 }
-                if($fields['prefix'] != ""){
+                if ($fields['prefix'] != "") {
                     $prefix_data_arr[$fields['form_name']] = $fields['prefix'];
                 }
                 $form_fields[$key]['field_data'] = $fields;
             }
-           
-            $form_values = json_decode($form_data['form_data'],TRUE);
+
+            $form_values = json_decode($form_data['form_data'], TRUE);
             foreach ($form_values as $key => $value) {
-                if(array_key_exists($key,$prefix_data_arr)){
+                if (array_key_exists($key, $prefix_data_arr)) {
                     $value = trim(str_replace($prefix_data_arr[$key], "", $value));
                     $form_values[$key] = $value;
                 }
@@ -1997,40 +2025,41 @@ class Form extends MY_Controller {
             $data['form_fields'] = $form_fields;
             $data['form_data'] = $form_data;
             $data['form_values'] = $form_values;
-            $html_content = $this->smarty->fetch('edit_form_data.tpl', $data,TRUE);
-        }else{
+            $html_content = $this->smarty->fetch('edit_form_data.tpl', $data, TRUE);
+        } else {
             $data = [];
             $html_content = "";
         }
-        
+
 
         $return = [
             "html_content" => $html_content
         ];
         echo json_encode($return);
     }
-    public function form_image_data_edit(){
+    public function form_image_data_edit()
+    {
         $post_data = $this->input->post();
         $form_data = $this->Form_model->getFormCollectionEditData($post_data['collection_id']);
         // pr($form_data,1);
         $data = [];
         $prefix_data_arr = [];
-        if(is_valid_array($form_data)){
-            $form_fields = json_decode($form_data['from_field'],TRUE);
+        if (is_valid_array($form_data)) {
+            $form_fields = json_decode($form_data['from_field'], TRUE);
             foreach ($form_fields as $key => $value) {
-                $fields = json_decode($value['field_data'],TRUE);
-                if($fields['form_type'] == "radio" || $fields['form_type'] == "drop_down"){
+                $fields = json_decode($value['field_data'], TRUE);
+                if ($fields['form_type'] == "radio" || $fields['form_type'] == "drop_down") {
                     $fields['form_value'] = explode(",", $fields['form_value']);
                 }
-                if($fields['prefix'] != ""){
+                if ($fields['prefix'] != "") {
                     $prefix_data_arr[$fields['form_name']] = $fields['prefix'];
                 }
                 $form_fields[$key]['field_data'] = $fields;
             }
-           
-            $form_values = json_decode($form_data['form_data'],TRUE);
+
+            $form_values = json_decode($form_data['form_data'], TRUE);
             foreach ($form_values as $key => $value) {
-                if(array_key_exists($key,$prefix_data_arr)){
+                if (array_key_exists($key, $prefix_data_arr)) {
                     $value = trim(str_replace($prefix_data_arr[$key], "", $value));
                     $form_values[$key] = $value;
                 }
@@ -2039,42 +2068,43 @@ class Form extends MY_Controller {
             $data['form_fields'] = $form_fields;
             $data['form_data'] = $form_data;
             $data['form_values'] = $form_values;
-            $html_content = $this->smarty->fetch('edit_form_image_data.tpl', $data,TRUE);
-        }else{
+            $html_content = $this->smarty->fetch('edit_form_image_data.tpl', $data, TRUE);
+        } else {
             $data = [];
             $html_content = "";
         }
-        
+
 
         $return = [
             "html_content" => $html_content
         ];
         echo json_encode($return);
     }
-    public function submit_edit_form(){
-        
+    public function submit_edit_form()
+    {
+
         $post_data = $this->input->post();
-       
+
         $form_collected_data = $this->Form_model->getFormCollectionEditData($post_data['form_data_collection_id']);
         $form_data = $this->Form_model->getFormJson($post_data['from_url']);
-        $form_fields = json_decode($form_data['from_field'],TRUE);
+        $form_fields = json_decode($form_data['from_field'], TRUE);
         $image_arr = [];
 
         $form_data_collection_count = $this->Form_model->getSchoolFormCollectionDataCount($post_data['matser_id']);
-        $form_data_collection_count_val = $form_data_collection_count['count'] > 0 ? $form_data_collection_count['count']+1 : 1;
+        $form_data_collection_count_val = $form_data_collection_count['count'] > 0 ? $form_data_collection_count['count'] + 1 : 1;
         $form_data_json = [];
         foreach ($form_fields as $key => $value) {
-            $field_data = json_decode($value['field_data'],TRUE);
-            if($field_data['form_type'] != "file"){
+            $field_data = json_decode($value['field_data'], TRUE);
+            if ($field_data['form_type'] != "file") {
                 $original_name = $field_data['form_name'];
                 $field_data['form_name'] = str_replace('.', '_', $field_data['form_name']);
                 $field_value = $post_data[$field_data['form_name']] != "" ? $post_data[$field_data['form_name']] : "";
-                $field_value = $field_data['prefix'] != "" ? $field_data['prefix']." ".$field_value : $field_value;
+                $field_value = $field_data['prefix'] != "" ? $field_data['prefix'] . " " . $field_value : $field_value;
                 $form_data_json[$original_name] = $field_value;
             }
         }
-        $form_collected_data_values = json_decode($form_collected_data['form_data'],TRUE);
-        $form_collected_data_values = array_merge($form_collected_data_values,$form_data_json);
+        $form_collected_data_values = json_decode($form_collected_data['form_data'], TRUE);
+        $form_collected_data_values = array_merge($form_collected_data_values, $form_data_json);
         // pr($data,1);
         // foreach ($form_collected_data_values as $key => $value) {
         //     if(array_key_exists($key,$form_data_json)){
@@ -2084,28 +2114,29 @@ class Form extends MY_Controller {
         $msg = "Something went wrong";
         $success = 0;
         $update_data = [
-            "form_data" => json_encode($form_collected_data_values,TRUE),
+            "form_data" => json_encode($form_collected_data_values, TRUE),
             "updated_by" => $this->session->userdata('user_id'),
             "updated_date" => date("Y-m-d H:i:s")
         ];
         // pr($update_data,1);
-        $affected_row = $this->Form_model->updateFormData($update_data,$post_data['form_data_collection_id']);
+        $affected_row = $this->Form_model->updateFormData($update_data, $post_data['form_data_collection_id']);
         if ($affected_row > 0) {
             $success = 1;
             $msg = 'Form data updated successfully.';
         }
-        
+
         $ret_arr['messages'] = $msg;
         $ret_arr['success'] = $success;
         echo json_encode($ret_arr);
         exit();
     }
-    public function submit_edit_image_form(){
-        
+    public function submit_edit_image_form()
+    {
+
         $post_data = $this->input->post();
         $form_collected_data = $this->Form_model->getFormCollectionEditData($post_data['form_data_collection_id']);
         $form_data = $this->Form_model->getFormJson($post_data['from_url']);
-        $form_fields = json_decode($form_data['from_field'],TRUE);
+        $form_fields = json_decode($form_data['from_field'], TRUE);
         $image_arr = [];
         $form_data_collection_count_val = $form_collected_data['sr_no'];
         $folderPath = "public/uploads/data_collection_img/" . $post_data['from_url'];
@@ -2118,8 +2149,8 @@ class Form extends MY_Controller {
             $profileImageData = $_FILES[$key]["name"] != "" ? $_FILES[$key] : [];
             $fileName = $_FILES[$key]['name'];
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            $_FILES[$key]["name"] = $post_data['from_url']."_".$form_data_collection_count_val.".".$fileExtension;
-            $updateFolderPath = $folderPath."/".$key;
+            $_FILES[$key]["name"] = $post_data['from_url'] . "_" . $form_data_collection_count_val . "." . $fileExtension;
+            $updateFolderPath = $folderPath . "/" . $key;
             // Ensure the folder exists, if not, create it
             if (!is_dir($updateFolderPath) && $updateFolderPath != "") {
                 mkdir($updateFolderPath, 0777, true);
@@ -2131,7 +2162,7 @@ class Form extends MY_Controller {
             $this->load->library("upload", $config);
             $this->upload->initialize($config);
             if (!empty($profileImageData)) {
-                
+
                 if (!$this->upload->do_upload($key)) {
                     // If upload fails, store the error message
                     $error = $this->upload->display_errors('', '');
@@ -2180,59 +2211,61 @@ class Form extends MY_Controller {
                 }
             }
         }
-        if (count($upload_error_msg) > 0 ) {
+        if (count($upload_error_msg) > 0) {
             $msg = $upload_error_msg["error"];
         } else {
             $form_data_json = [];
             foreach ($form_fields as $key => $value) {
-                $field_data = json_decode($value['field_data'],TRUE);
-                if($field_data['form_type'] == "file"){
+                $field_data = json_decode($value['field_data'], TRUE);
+                if ($field_data['form_type'] == "file") {
                     $form_data_json[$field_data['form_name']] = $image_arr[$field_data['form_name']] != "" ? $image_arr[$field_data['form_name']] : "";
                 }
             }
-            $form_collected_data_values = json_decode($form_collected_data['form_data'],TRUE);
-            $form_collected_data_values = array_merge($form_collected_data_values,$form_data_json);
+            $form_collected_data_values = json_decode($form_collected_data['form_data'], TRUE);
+            $form_collected_data_values = array_merge($form_collected_data_values, $form_data_json);
             $msg = "Something went wrong";
             $success = 0;
             $update_data = [
-                "form_data" => json_encode($form_collected_data_values,TRUE),
+                "form_data" => json_encode($form_collected_data_values, TRUE),
                 "updated_by" => $this->session->userdata('user_id'),
                 "updated_date" => date("Y-m-d H:i:s")
             ];
             // pr($update_data,1);
-            $affected_row = $this->Form_model->updateFormData($update_data,$post_data['form_data_collection_id']);
+            $affected_row = $this->Form_model->updateFormData($update_data, $post_data['form_data_collection_id']);
             if ($affected_row > 0) {
                 $success = 1;
                 $msg = 'Form image data updated successfully.';
             }
         }
-        
+
         $ret_arr['messages'] = $msg;
         $ret_arr['success'] = $success;
         echo json_encode($ret_arr);
         exit();
     }
 
-    public function change_card_generated(){
+    public function change_card_generated()
+    {
         $post_data = $this->input->post();
         $selected_records = $post_data['selected_records'];
-        $selectedReason = $post_data['selectedReason']."_".date("d-m-Y_H_i");
-        $afftectedRows = $this->Form_model->updateCardGenerated($selected_records,$selectedReason);
-        if($afftectedRows > 0){
+        $selectedReason = $post_data['selectedReason'] . "_" . date("d-m-Y_H_i");
+        $afftectedRows = $this->Form_model->updateCardGenerated($selected_records, $selectedReason);
+        if ($afftectedRows > 0) {
             $ret_arr['messages'] = "Card genrated updated successfully.";
             $ret_arr['success'] = 1;
-        }else{
+        } else {
             $ret_arr['messages'] = "Something went wrong";
             $ret_arr['success'] = 0;
         }
-        
+
         echo json_encode($ret_arr);
         exit();
     }
 
-    public function export_form_data(){
+    public function export_form_data()
+    {
         // error_reporting(-1);
-		// ini_set('display_errors', 1);
+        // ini_set('display_errors', 1);
         require_once APPPATH . 'libraries/PHPExcel/IOFactory.php';
         $this->load->library('excel');
         $object = new PHPExcel();
@@ -2241,21 +2274,22 @@ class Form extends MY_Controller {
         $form_data = $this->Form_model->getFormJsonData($school_id);
         $sheet->setTitle(substr($form_data['name'], 0, 31));
         // pr($form_data['name'],1);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
         $headings = [];
         $headings[] = "SR. NO.";
         foreach ($from_field as $key => $value) {
-            $value = json_decode($value,TRUE);
+            $value = json_decode($value, TRUE);
             $headings[] = $value['form_title'];
         }
         // Set headers only
         $sheet->fromArray([$headings], NULL, 'A1');
 
         // Optional styling
-        $sheet->getStyle($sheet->calculateWorksheetDimension())->getFont()->setBold(true);;
+        $sheet->getStyle($sheet->calculateWorksheetDimension())->getFont()->setBold(true);
+        ;
 
-        $filename = $form_data['url']."_" . date('d-m-Y_H_i') . '.xlsx';
+        $filename = $form_data['url'] . "_" . date('d-m-Y_H_i') . '.xlsx';
         $colCount = count($headings); // e.g., 3
         for ($i = 0; $i < $colCount; $i++) {
             $colLetter = PHPExcel_Cell::stringFromColumnIndex($i); // A, B, C...
@@ -2275,7 +2309,8 @@ class Form extends MY_Controller {
         exit;
     }
 
-    public function importFormData(){
+    public function importFormData()
+    {
         require_once APPPATH . 'libraries/PHPExcel/IOFactory.php';
 
         if (!empty($_FILES['import_file']['name'])) {
@@ -2283,11 +2318,11 @@ class Form extends MY_Controller {
             $fileType = $_FILES['import_file']['type'];
             $school_id = $this->input->post("school_id");
             $form_data = $this->Form_model->getFormJsonData($school_id);
-            $from_field = json_decode($form_data['from_field'],TRUE);
+            $from_field = json_decode($form_data['from_field'], TRUE);
             $from_field = array_column($from_field, "field_data");
 
             $form_data_collection_count = $this->Form_model->getSchoolFormCollectionDataCount($school_id);
-            $form_data_collection_count_val = $form_data_collection_count['count'] > 0 ? $form_data_collection_count['count']+1 : 1;
+            $form_data_collection_count_val = $form_data_collection_count['count'] > 0 ? $form_data_collection_count['count'] + 1 : 1;
             $message = "Something went wrong";
             $success = 0;
             try {
@@ -2295,7 +2330,7 @@ class Form extends MY_Controller {
                 $objPHPExcel = PHPExcel_IOFactory::load($fileTmpPath);
                 $sheetData = $objPHPExcel->getActiveSheet()->toArray(null, true, true, true);
                 // pr($sheetData,1);
-                if(count($sheetData[1]) == (count($from_field)+1)){
+                if (count($sheetData[1]) == (count($from_field) + 1)) {
                     unset($sheetData[1]);
                     $form_data_json = [];
                     $formattedData = [];
@@ -2304,29 +2339,29 @@ class Form extends MY_Controller {
                         $formattedData[$rowNum] = $formattedRow;
                     }
                     foreach ($formattedData as $key => $val) {
-                        
+
                         foreach ($from_field as $key => $value) {
-                            
-                            $field_data = json_decode($value,TRUE);
-                            if($field_data['form_type'] == "file"){
+
+                            $field_data = json_decode($value, TRUE);
+                            if ($field_data['form_type'] == "file") {
                                 $original_name = $field_data['form_name'];
-                                $folderPath = "public/uploads/data_collection_img/" . $form_data['url']."/";
-                                $image_name = $original_name."/".$form_data['url']."_".$val[0].".jpg";
+                                $folderPath = "public/uploads/data_collection_img/" . $form_data['url'] . "/";
+                                $image_name = $original_name . "/" . $form_data['url'] . "_" . $val[0] . ".jpg";
                                 $folderPath .= $image_name;
                                 $form_data_json[$original_name] = $folderPath;
-                            }else{
+                            } else {
                                 $original_name = $field_data['form_name'];
                                 $field_data['form_name'] = str_replace('.', '_', $field_data['form_name']);
-                                $field_value = $val[$key+1] != "" ? $val[$key+1] : "";
-                                $field_value = $field_data['prefix'] != "" ? $field_data['prefix']." ".$field_value : $field_value;
+                                $field_value = $val[$key + 1] != "" ? $val[$key + 1] : "";
+                                $field_value = $field_data['prefix'] != "" ? $field_data['prefix'] . " " . $field_value : $field_value;
                                 $form_data_json[$original_name] = $field_value;
                             }
                         }
-                        
+
                         $insert_data[] = [
                             "school_master_id" => $school_id,
                             "sr_no" => $val[0],
-                            "form_data" => json_encode($form_data_json,TRUE),
+                            "form_data" => json_encode($form_data_json, TRUE),
                             "added_date" => date("Y-m-d H:i:s")
                         ];
                         $form_data_collection_count_val++;
@@ -2339,7 +2374,7 @@ class Form extends MY_Controller {
                 } else {
                     $message = "Please add proper column data";
                 }
-                
+
             } catch (Exception $e) {
                 // die('Error loading file: ' . $e->getMessage());
             }
@@ -2351,9 +2386,10 @@ class Form extends MY_Controller {
         exit();
 
     }
-     /* design changes */
+    /* design changes */
     // below code is editor.
-    public function designer($id = null) {
+    public function designer($id = null)
+    {
         $data['design'] = null;
         $data['design_id'] = $id;
         $school_data = $this->Form_model->getSchoolFormCollectionDetail($id);
@@ -2372,20 +2408,20 @@ class Form extends MY_Controller {
                         }
                     }
                 }
-               
+
                 $data['design'] = [
                     'width' => $design['width'],
                     'height' => $design['height'],
                     'fields' => $fields,
                 ];
-                
+
             }
         }
 
         $form_data = $this->Form_model->getFormJsonData($id);
-        $from_field = json_decode($form_data['from_field'],TRUE);
+        $from_field = json_decode($form_data['from_field'], TRUE);
         $from_field = array_column($from_field, "field_data");
-        
+
         $newField = json_encode([
             "form_field_master_id" => "15",
             "form_title" => "Sr No",
@@ -2402,26 +2438,27 @@ class Form extends MY_Controller {
         ]);
         array_unshift($from_field, $newField);
         foreach ($from_field as $key => $value) {
-            $value = json_decode($value,TRUE);
-            $column[$value['form_name']] = '<%$'.$value['form_name'].'%>';
-            $form_tittle[$value['form_name']] =  $value['form_title'];
+            $value = json_decode($value, TRUE);
+            $column[$value['form_name']] = '<%$' . $value['form_name'] . '%>';
+            $form_tittle[$value['form_name']] = $value['form_title'];
             $field_type[] = $value['form_name'];
         }
         $data['field_types'] = $field_type;
         $data['placeholder_data'] = $column;
         $data['form_tittle'] = $form_tittle;
         $data['save_url'] = site_url('idcard/save');
-        $data['base_url'] = base_url(); 
-        $data['image_url'] = base_url('public/design_backgrounds/'.$design['background_image']);
-        $this->smarty->loadView('idcard_designer.tpl', $data,'Yes','No');                                                                                                          
+        $data['base_url'] = base_url();
+        $data['image_url'] = base_url('public/design_backgrounds/' . $design['background_image']);
+        $this->smarty->loadView('idcard_designer.tpl', $data, 'Yes', 'No');
         // $this->smarty->display('idcard_designer.tpl',$data);
-                                                                                      
+
         // $this->smarty->display('idcard_designer.tpl',$data);
 
     }
 
-    public function save() {     
-        $this->load->helper('file');   
+    public function save()
+    {
+        $this->load->helper('file');
         $design = $this->input->post('design');
         $design_id = $this->input->post('design_id');
         // Ensure fields are properly structured
@@ -2437,17 +2474,17 @@ class Form extends MY_Controller {
             }
         }
         // pr($fields,1);
-        if($old_url != ''){
+        if ($old_url != '') {
             $file_url = $old_url;
             $backgroundImage = basename($old_url);
-        }else{
+        } else {
             // $file_url = base_url('public/design_backgrounds/'.$fileName);
             $file_url = $design['backgroundImage'];
         }
-        
+
         // Prepare data for saving
         // pr($design,1);
-        $html_template = $this->generate_html_template($design,$file_url);
+        $html_template = $this->generate_html_template($design, $file_url);
         $save_data = [
             'entity_id' => $design_id,
             'name' => $design['name'] ?: 'ID Card Design ' . ($design_id ?: 'New'),
@@ -2458,10 +2495,10 @@ class Form extends MY_Controller {
             'background_image' => $backgroundImage,
             'col_per_row' => isset($design['col_per_row']) && $design['col_per_row'] > 0 ? $design['col_per_row'] : 2
         ];
-       
+
         // Save to database
         $saved_id = $this->Form_model->save_design($save_data);
-        
+
         // ... rest of your save logic
         $file_path = FCPATH . 'public/card_designs/design_' . $saved_id . '.html';
         if (!is_dir(dirname($file_path))) {
@@ -2469,73 +2506,75 @@ class Form extends MY_Controller {
         }
         write_file($file_path, $html_template);
         // $pdf_path = $this->generate_pdf($html_template, 5);
-        
+
         $dompdf = new Dompdf();
-        
+
         $dompdf->set_option('isRemoteEnabled', true);
         $dompdf->set_option('isPhpEnabled', true);
         $dompdf->set_option('tempDir', sys_get_temp_dir());
         // Load HTML content
         $dompdf->loadHtml($html_template);
-        
+
         // (Optional) Setup the paper size and orientation
         // $dompdf->setPaper('A4', 'portrait');
         $dompdf->setPaper('A4', 'landscape');
 
         // Render the HTML as PDF
         $dompdf->render();
-        
+
         // Output the generated PDF
         $filename = 'document_' . date('Ymd_His') . '.pdf';
-        $filepath =  FCPATH . 'public/card_designs/design_' . $saved_id .'.pdf';
-        
-    // 7. Save the PDF to file
+        $filepath = FCPATH . 'public/card_designs/design_' . $saved_id . '.pdf';
+
+        // 7. Save the PDF to file
         file_put_contents($filepath, $dompdf->output());
         // echo json_encode($ret_arr);
         // exit;
     }
 
-    public function generatePdfWithDom($html = ''){
-        
+    public function generatePdfWithDom($html = '')
+    {
+
         $dompdf = new Dompdf();
-        
+
         $dompdf->set_option('isRemoteEnabled', true);
         $dompdf->set_option('isPhpEnabled', true);
         $dompdf->set_option('tempDir', sys_get_temp_dir());
         // Load HTML content
         $dompdf->loadHtml($html);
-        
+
         // (Optional) Setup the paper size and orientation
         $dompdf->setPaper('A4', 'portrait');
-        
+
         // Render the HTML as PDF
         $dompdf->render();
         $saved_id = uniqid();
         // Output the generated PDF
-        $filename = 'design_' . $saved_id .'.pdf';
+        $filename = 'design_' . $saved_id . '.pdf';
         createFolder("public/card_designs");
-        $filepath =  FCPATH . 'public/card_designs/'.$filename;
-    
-    // 7. Save the PDF to file
+        $filepath = FCPATH . 'public/card_designs/' . $filename;
+
+        // 7. Save the PDF to file
         file_put_contents($filepath, $dompdf->output());
-        
+
         $this->download_pdf($filepath);
     }
-    
 
-    public function download_pdf($filepath) {
+
+    public function download_pdf($filepath)
+    {
         // $filepath = FCPATH.'public/card_designs/'.$filename;
         // pr($fie)
         if (file_exists($filepath)) {
             header('Content-Description: File Transfer');
             header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+            header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
             header('Expires: 0');
             header('Cache-Control: must-revalidate');
             header('Pragma: public');
             header('Content-Length: ' . filesize($filepath));
             readfile($filepath);
-            
+
             // Optional: Delete after download
             // unlink($filepath);
             exit;
@@ -2544,21 +2583,22 @@ class Form extends MY_Controller {
         }
     }
 
-    private function generate_html_template($design = [], $bg_url = '') {
+    private function generate_html_template($design = [], $bg_url = '')
+    {
         // Set default dimensions if not provided
-        
+
         $width = isset($design['width']) ? $design['width'] : 595; // Default A4 width in pixels
         $height = isset($design['height']) ? $design['height'] : 842; // Default A4 height in pixels
         $html = '<table>';
         // Start HTML with proper DOCTYPE and meta tags
         $html .= '<tr>';
-        
+
         // Start card container
         $html .= '<td><div class="id-card" style="position:relative;width: 350px; height: 300px;">';
-        
+
         // Add background image (as img tag instead of CSS background for better PDF compatibility)
         if (!empty($bg_url)) {
-            $html .= '<img src="'.htmlspecialchars($bg_url, ENT_QUOTES).'" style="
+            $html .= '<img src="' . htmlspecialchars($bg_url, ENT_QUOTES) . '" style="
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -2568,25 +2608,26 @@ class Form extends MY_Controller {
                 z-index: -1;
             ">';
         }
-        
+
         // Add all fields
         if (isset($design['fields']) && is_array($design['fields'])) {
             foreach ($design['fields'] as $field) {
-                if (!isset($field['type'])) continue;
+                if (!isset($field['type']))
+                    continue;
                 $top = isset($field['top']) ? $field['top'] : 0;
                 $left = isset($field['left']) ? $field['left'] : 0;
                 $width = isset($field['width']) ? $field['width'] : 50;
                 $height = isset($field['height']) ? $field['height'] : 50;
                 $html .= '<div style="
                     position: absolute;
-                    top: '.$top.'px;
-                    left: '.$left.'px;
-                    width: '.$width.'px;
-                    height: '.$height.'px;';
-                
+                    top: ' . $top . 'px;
+                    left: ' . $left . 'px;
+                    width: ' . $width . 'px;
+                    height: ' . $height . 'px;';
+
                 // Add specific styles based on field type
                 switch ($field['type']) {
-                    
+
                     case 'image':
                         $html .= 'overflow: hidden;';
                         break;
@@ -2598,16 +2639,16 @@ class Form extends MY_Controller {
                         $html .= 'font-family: Arial, sans-serif;'; // Default font
                         break;
                 }
-                
+
                 $html .= '">';
-                
+
                 // Safely output field content
                 if (isset($field['html'])) {
                     $html .= $field['html'];
                 } elseif (isset($field['placeholder'])) {
                     $html .= htmlspecialchars($field['placeholder'], ENT_QUOTES);
                 }
-                
+
                 $html .= '</div>';
             }
         }
@@ -2616,10 +2657,10 @@ class Form extends MY_Controller {
 
 
         $html .= '<td><div class="id-card" style="position:relative;width: 350px; height: 300px;">';
-        
+
         // Add background image (as img tag instead of CSS background for better PDF compatibility)
         if (!empty($bg_url)) {
-            $html .= '<img src="'.htmlspecialchars($bg_url, ENT_QUOTES).'" style="
+            $html .= '<img src="' . htmlspecialchars($bg_url, ENT_QUOTES) . '" style="
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -2629,25 +2670,26 @@ class Form extends MY_Controller {
                 z-index: -1;
             ">';
         }
-        
+
         // Add all fields
         if (isset($design['fields']) && is_array($design['fields'])) {
             foreach ($design['fields'] as $field) {
-                if (!isset($field['type'])) continue;
-                
+                if (!isset($field['type']))
+                    continue;
+
                 // Set default field properties
                 $top = isset($field['top']) ? $field['top'] : 0;
                 $left = isset($field['left']) ? $field['left'] : 0;
                 $width = isset($field['width']) ? $field['width'] : 100;
                 $height = isset($field['height']) ? $field['height'] : 50;
-                
+
                 $html .= '<div style="
                     position: absolute;
-                    top: '.$top.'px;
-                    left: '.$left.'px;
-                    width: '.$width.'px;
-                    height: '.$height.'px;';
-                
+                    top: ' . $top . 'px;
+                    left: ' . $left . 'px;
+                    width: ' . $width . 'px;
+                    height: ' . $height . 'px;';
+
                 // Add specific styles based on field type
 
                 switch ($field['type']) {
@@ -2662,35 +2704,36 @@ class Form extends MY_Controller {
                         $html .= 'font-family: Arial, sans-serif;'; // Default font
                         break;
                 }
-                
+
                 $html .= '">';
-                
+
                 // Safely output field content
                 if (isset($field['html'])) {
                     $html .= $field['html'];
                 } elseif (isset($field['placeholder'])) {
                     $html .= htmlspecialchars($field['placeholder'], ENT_QUOTES);
                 }
-                
+
                 $html .= '</div>';
             }
         }
-        
+
         $html .= '</div></td></tr>';
-        
+
         $html .= '</table>';
         return $html;
     }
 
 
-    public function upload_background() {
+    public function upload_background()
+    {
         createFolder("public/design_backgrounds");
-        $config['upload_path'] = FCPATH.'public/design_backgrounds/';
+        $config['upload_path'] = FCPATH . 'public/design_backgrounds/';
         $config['allowed_types'] = 'gif|jpg|jpeg|png';
         $config['max_size'] = 2048; // 2MB
         $config['encrypt_name'] = TRUE;
         $this->load->library('upload', $config);
-        
+
         if (!$this->upload->do_upload('bg_image')) {
             $error = $this->upload->display_errors();
             echo json_encode(['success' => false, 'error' => $error]);
@@ -2706,7 +2749,7 @@ class Form extends MY_Controller {
         $post_data = $this->input->post();
         $message = "Somthing went wrong";
         $success = 0;
-        if($post_data['school_id'] > 0){
+        if ($post_data['school_id'] > 0) {
             $school_data = $this->Form_model->getSchoolFormCollectionDetail($post_data['school_id']);
             $folderPath = "public/uploads/data_collection_img/" . $school_data['url'];
             if ($this->deleteFolder($folderPath)) {
@@ -2720,8 +2763,10 @@ class Form extends MY_Controller {
         exit();
 
     }
-    public function deleteFolder($folderPath = ""){
-        if (!is_dir($folderPath)) return false;
+    public function deleteFolder($folderPath = "")
+    {
+        if (!is_dir($folderPath))
+            return false;
         $files = array_diff(scandir($folderPath), ['.', '..']);
 
         foreach ($files as $file) {
@@ -2736,542 +2781,580 @@ class Form extends MY_Controller {
 
         return rmdir($folderPath);
     }
-    public function generateFormChanelPartTemplate($details = []){
+    public function generateFormChanelPartTemplate($details = [])
+    {
         $school_data = $this->session->userdata("extra_json");
-		/**
-		 * Dynamic Banner Generator (PHP GD)
-		 */
-		$template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/template.png";
-		$fontBold =dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
+        /**
+         * Dynamic Banner Generator (PHP GD)
+         */
+        $template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/template.png";
+        $fontBold = dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
 
-		if (!file_exists($template)) {
-			http_response_code(500);
-			die("Template image not found: " . $template);
-		}
+        if (!file_exists($template)) {
+            http_response_code(500);
+            die("Template image not found: " . $template);
+        }
 
-		if (!file_exists($fontBold)) {
-			http_response_code(500);
-			die("Font not found: " . $fontBold . "\n\nPut a TTF font in /fonts and rename it to Roboto-Bold.ttf");
-		}
+        if (!file_exists($fontBold)) {
+            http_response_code(500);
+            die("Font not found: " . $fontBold . "\n\nPut a TTF font in /fonts and rename it to Roboto-Bold.ttf");
+        }
         // pr($details,1);
 
-		// Dynamic values (GET supported)
+        // Dynamic values (GET supported)
         $user_mobile_number = $this->session->userdata("user_mobile_number");
-		$school_name     = $details['school_name'];
-		$mobile          = "M-".$details['mobile'];
-		$website         = "www.bharatidcard.com";
-		$channelPartner  = strtoupper(trim($details['channelPartner']));
+        $school_name = $details['school_name'];
+        $mobile = "M-" . $details['mobile'];
+        $website = "";
+        $channelPartner = strtoupper(trim($details['channelPartner']));
         $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
-		$section         = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);
-        
-		// Optional: Make school name uppercase (like your sample)
-		$school_name = strtoupper(trim($school_name));
-		$mobile      = trim($mobile);
-		$website     = trim($website);
-
-		// Load template
-		$image = imagecreatefrompng($template);
-
-		// Enable alpha for PNG
-		imagesavealpha($image, true);
-
-		// Colors
-		$blue      = imagecolorallocate($image, 25, 40, 130);
-		$black     = imagecolorallocate($image, 0, 0, 0);
-		$blackLight = imagecolorallocate($image, 52, 60, 75);
-		$blackMoreLight = imagecolorallocate($image, 85, 95, 115);
-		$white     = imagecolorallocate($image, 251, 252, 244);
-		$lightblue = imagecolorallocate($image, 43, 53, 100);
-
-
-		// ----------------------------
-		// 1) SCHOOL NAME (height stretch)
-		// ----------------------------
-		$fontSize = 48;
-
-		// Position
-		$x = 240;
-		$y = 280;
-
-		// Height stretch factor
-		$stretchY = 1.7; // 1.0 = normal, 1.3+ = taller
-
-		// Create temp text image
-		$bbox = imagettfbbox($fontSize, 0, $fontBold, $school_name);
-		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
-		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
-
-		$tmp = imagecreatetruecolor($tmpW, $tmpH);
-
-		// Transparent background
-		imagealphablending($tmp, false);
-		imagesavealpha($tmp, true);
-		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
-		imagefill($tmp, 0, 0, $transparent);
-
-		// Draw normal text on temp
-		imagealphablending($tmp, true);
-		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blue, $fontBold, $school_name);
-
-		// Create stretched image
-		$newH = (int)($tmpH * $stretchY);
-
-		$stretched = imagecreatetruecolor($tmpW, $newH);
-		imagealphablending($stretched, false);
-		imagesavealpha($stretched, true);
-		imagefill($stretched, 0, 0, $transparent);
-
-		// Stretch ONLY height
-		imagecopyresampled(
-			$stretched,
-			$tmp,
-			0, 0, 0, 0,
-			$tmpW, $newH,
-			$tmpW, $tmpH
-		);
-
-		// Paste on main image
-		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
-
-		// Destroy temp images
-		imagedestroy($tmp);
-		imagedestroy($stretched);
-		
-
-
-		// ----------------------------
-		// 2) MOBILE (top-right)
-		// ----------------------------
-
-		$fontSize = 21;
-
-		// Position
-		$x = 1070;
-		$y = 82;
-
-		// Height stretch factor
-		$stretchY = 1.2; // 1.0 = normal, 1.3+ = taller
-
-		// Create temp text image
-		$bbox = imagettfbbox($fontSize, 0, $fontBold, $mobile);
-		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
-		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
-
-		$tmp = imagecreatetruecolor($tmpW, $tmpH);
-
-		// Transparent background
-		imagealphablending($tmp, false);
-		imagesavealpha($tmp, true);
-		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
-		imagefill($tmp, 0, 0, $transparent);
-
-		// Draw normal text on temp
-		imagealphablending($tmp, true);
-		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blackMoreLight, $fontBold, $mobile);
-
-		// Create stretched image
-		$newH = (int)($tmpH * $stretchY);
-
-		$stretched = imagecreatetruecolor($tmpW, $newH);
-		imagealphablending($stretched, false);
-		imagesavealpha($stretched, true);
-		imagefill($stretched, 0, 0, $transparent);
-
-		// Stretch ONLY height
-		imagecopyresampled(
-			$stretched,
-			$tmp,
-			0, 0, 0, 0,
-			$tmpW, $newH,
-			$tmpW, $tmpH
-		);
-
-		// Paste on main image
-		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
-
-		// Destroy temp images
-		imagedestroy($tmp);
-		imagedestroy($stretched);
-
-		
-
-
-		// ----------------------------
-		// 3) CHANNEL PARTNER
-		// ----------------------------
-		$fontSize2 = 45;
-		$x2 = 25;
-		$y2 = 100;
-		imagettftext($image, $fontSize2, 0, $x2, $y2, $lightblue, $fontBold, $channelPartner);
-		
-
-
-		// ----------------------------
-		// 4) WEBSITE (below mobile)
-		// ----------------------------
-		
-		$fontSize = 25.7;
-
-		// Position
-		$x = 1070;
-		$y = 130;
-
-		// Height stretch factor
-		$stretchY = 1.1; // 1.0 = normal, 1.3+ = taller
-
-		// Create temp text image
-		$bbox = imagettfbbox($fontSize, 0, $fontBold, $website);
-		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
-		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
-
-		$tmp = imagecreatetruecolor($tmpW, $tmpH);
-
-		// Transparent background
-		imagealphablending($tmp, false);
-		imagesavealpha($tmp, true);
-		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
-		imagefill($tmp, 0, 0, $transparent);
-
-		// Draw normal text on temp
-		imagealphablending($tmp, true);
-		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blackLight, $fontBold, $website);
-
-		// Create stretched image
-		$newH = (int)($tmpH * $stretchY);
-
-		$stretched = imagecreatetruecolor($tmpW, $newH);
-		imagealphablending($stretched, false);
-		imagesavealpha($stretched, true);
-		imagefill($stretched, 0, 0, $transparent);
-
-		// Stretch ONLY height
-		imagecopyresampled(
-			$stretched,
-			$tmp,
-			0, 0, 0, 0,
-			$tmpW, $newH,
-			$tmpW, $tmpH
-		);
-
-		// Paste on main image
-		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
-
-		// Destroy temp images
-		imagedestroy($tmp);
-		imagedestroy($stretched);
-
-		
-
-
-		// ----------------------------
-		// 5) SESSION
-		// ----------------------------
-		$fontSize2 = 32;
-		$x3 = 17;
-		$y3 = 375;
-		imagettftext($image, $fontSize2, 0, $x3, $y3, $white, $fontBold, $section);
-
-
-		
-		// ----------------------------
-		// SCHOOL LOGO (top center)
-		// ----------------------------
-        
-		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/".$school_data['school_logo'];
-       
-		if (file_exists($logoPath)) {
-			$logo = createImageFromFile($logoPath);
-
-			$logoW = 100;
-			$logoH = 110;
-
-			$logoResized = imagecreatetruecolor($logoW, $logoH);
-			imagealphablending($logoResized, false);
-			imagesavealpha($logoResized, true);
-
-			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
-			imagefill($logoResized, 0, 0, $transparent);
-
-			imagecopyresampled(
-				$logoResized,
-				$logo,
-				0, 0, 0, 0,
-				$logoW, $logoH,
-				imagesx($logo),
-				imagesy($logo)
-			);
-
-			$dstX = 930;
-			$dstY = 21;
-
-			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
-
-			imagedestroy($logo);
-			imagedestroy($logoResized);
-		}
-        
-
-		// ----------------------------
-		// LEFT LOGO
-		// ----------------------------
-        
-		$achoolPath = dirname(dirname(dirname(dirname(__DIR__))))."/".$details['school_image'];
-    
-		if (file_exists($achoolPath)) {
-
-			$logo = createImageFromFile($achoolPath);
-
-			$logoW = 160;
-			$logoH = 160;
-
-			$logoResized = imagecreatetruecolor($logoW, $logoH);
-			imagealphablending($logoResized, false);
-			imagesavealpha($logoResized, true);
-
-			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
-			imagefill($logoResized, 0, 0, $transparent);
-
-			imagecopyresampled(
-				$logoResized,
-				$logo,
-				0, 0, 0, 0,
-				$logoW, $logoH,
-				imagesx($logo),
-				imagesy($logo)
-			);
-
-			$dstX = 10;
-			$dstY = 150;
-
-			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
-
-			imagedestroy($logo);
-			imagedestroy($logoResized);
-		}
-
-
-
-		// ----------------------------
-		// SAVE IMAGE
-		// ----------------------------
-		$saveDir = FCPATH . "public/uploads/form_template_img";
+        $section = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-" . date("Y") . "-" . ((int) date("y") + 1);
+
+        // Optional: Make school name uppercase (like your sample)
+        $school_name = strtoupper(trim($school_name));
+        $mobile = trim($mobile);
+        $website = trim($website);
+
+        // Load template
+        $image = imagecreatefrompng($template);
+
+        // Enable alpha for PNG
+        imagesavealpha($image, true);
+
+        // Colors
+        $blue = imagecolorallocate($image, 25, 40, 130);
+        $black = imagecolorallocate($image, 0, 0, 0);
+        $blackLight = imagecolorallocate($image, 52, 60, 75);
+        $blackMoreLight = imagecolorallocate($image, 85, 95, 115);
+        $white = imagecolorallocate($image, 251, 252, 244);
+        $lightblue = imagecolorallocate($image, 43, 53, 100);
+
+
+        // ----------------------------
+        // 1) SCHOOL NAME (height stretch)
+        // ----------------------------
+        $fontSize = 48;
+
+        // Position
+        $x = 240;
+        $y = 280;
+
+        // Height stretch factor
+        $stretchY = 1.7; // 1.0 = normal, 1.3+ = taller
+
+        // Create temp text image
+        $bbox = imagettfbbox($fontSize, 0, $fontBold, $school_name);
+        $tmpW = abs($bbox[2] - $bbox[0]) + 20;
+        $tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+        $tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+        // Transparent background
+        imagealphablending($tmp, false);
+        imagesavealpha($tmp, true);
+        $transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+        imagefill($tmp, 0, 0, $transparent);
+
+        // Draw normal text on temp
+        imagealphablending($tmp, true);
+        imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blue, $fontBold, $school_name);
+
+        // Create stretched image
+        $newH = (int) ($tmpH * $stretchY);
+
+        $stretched = imagecreatetruecolor($tmpW, $newH);
+        imagealphablending($stretched, false);
+        imagesavealpha($stretched, true);
+        imagefill($stretched, 0, 0, $transparent);
+
+        // Stretch ONLY height
+        imagecopyresampled(
+            $stretched,
+            $tmp,
+            0,
+            0,
+            0,
+            0,
+            $tmpW,
+            $newH,
+            $tmpW,
+            $tmpH
+        );
+
+        // Paste on main image
+        imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+        // Destroy temp images
+        imagedestroy($tmp);
+        imagedestroy($stretched);
+
+
+
+        // ----------------------------
+        // 2) MOBILE (top-right)
+        // ----------------------------
+
+        $fontSize = 21;
+
+        // Position
+        $x = 1070;
+        $y = 82;
+
+        // Height stretch factor
+        $stretchY = 1.2; // 1.0 = normal, 1.3+ = taller
+
+        // Create temp text image
+        $bbox = imagettfbbox($fontSize, 0, $fontBold, $mobile);
+        $tmpW = abs($bbox[2] - $bbox[0]) + 20;
+        $tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+        $tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+        // Transparent background
+        imagealphablending($tmp, false);
+        imagesavealpha($tmp, true);
+        $transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+        imagefill($tmp, 0, 0, $transparent);
+
+        // Draw normal text on temp
+        imagealphablending($tmp, true);
+        imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blackMoreLight, $fontBold, $mobile);
+
+        // Create stretched image
+        $newH = (int) ($tmpH * $stretchY);
+
+        $stretched = imagecreatetruecolor($tmpW, $newH);
+        imagealphablending($stretched, false);
+        imagesavealpha($stretched, true);
+        imagefill($stretched, 0, 0, $transparent);
+
+        // Stretch ONLY height
+        imagecopyresampled(
+            $stretched,
+            $tmp,
+            0,
+            0,
+            0,
+            0,
+            $tmpW,
+            $newH,
+            $tmpW,
+            $tmpH
+        );
+
+        // Paste on main image
+        imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+        // Destroy temp images
+        imagedestroy($tmp);
+        imagedestroy($stretched);
+
+
+
+
+        // ----------------------------
+        // 3) CHANNEL PARTNER
+        // ----------------------------
+        $fontSize2 = 45;
+        $x2 = 25;
+        $y2 = 100;
+        imagettftext($image, $fontSize2, 0, $x2, $y2, $lightblue, $fontBold, $channelPartner);
+
+
+
+        // ----------------------------
+        // 4) WEBSITE (below mobile)
+        // ----------------------------
+
+        $fontSize = 25.7;
+
+        // Position
+        $x = 1070;
+        $y = 130;
+
+        // Height stretch factor
+        $stretchY = 1.1; // 1.0 = normal, 1.3+ = taller
+
+        // Create temp text image
+        $bbox = imagettfbbox($fontSize, 0, $fontBold, $website);
+        $tmpW = abs($bbox[2] - $bbox[0]) + 20;
+        $tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+        $tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+        // Transparent background
+        imagealphablending($tmp, false);
+        imagesavealpha($tmp, true);
+        $transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+        imagefill($tmp, 0, 0, $transparent);
+
+        // Draw normal text on temp
+        imagealphablending($tmp, true);
+        imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blackLight, $fontBold, $website);
+
+        // Create stretched image
+        $newH = (int) ($tmpH * $stretchY);
+
+        $stretched = imagecreatetruecolor($tmpW, $newH);
+        imagealphablending($stretched, false);
+        imagesavealpha($stretched, true);
+        imagefill($stretched, 0, 0, $transparent);
+
+        // Stretch ONLY height
+        imagecopyresampled(
+            $stretched,
+            $tmp,
+            0,
+            0,
+            0,
+            0,
+            $tmpW,
+            $newH,
+            $tmpW,
+            $tmpH
+        );
+
+        // Paste on main image
+        imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+        // Destroy temp images
+        imagedestroy($tmp);
+        imagedestroy($stretched);
+
+
+
+
+        // ----------------------------
+        // 5) SESSION
+        // ----------------------------
+        $fontSize2 = 32;
+        $x3 = 17;
+        $y3 = 375;
+        imagettftext($image, $fontSize2, 0, $x3, $y3, $white, $fontBold, $section);
+
+
+
+        // ----------------------------
+        // SCHOOL LOGO (top center)
+        // ----------------------------
+
+        $logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/" . $school_data['school_logo'];
+
+        if (file_exists($logoPath)) {
+            $logo = createImageFromFile($logoPath);
+
+            $logoW = 100;
+            $logoH = 110;
+
+            $logoResized = imagecreatetruecolor($logoW, $logoH);
+            imagealphablending($logoResized, false);
+            imagesavealpha($logoResized, true);
+
+            $transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+            imagefill($logoResized, 0, 0, $transparent);
+
+            imagecopyresampled(
+                $logoResized,
+                $logo,
+                0,
+                0,
+                0,
+                0,
+                $logoW,
+                $logoH,
+                imagesx($logo),
+                imagesy($logo)
+            );
+
+            $dstX = 930;
+            $dstY = 21;
+
+            imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+            imagedestroy($logo);
+            imagedestroy($logoResized);
+        }
+
+
+        // ----------------------------
+        // LEFT LOGO
+        // ----------------------------
+
+        $achoolPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/" . $details['school_image'];
+
+        if (file_exists($achoolPath)) {
+
+            $logo = createImageFromFile($achoolPath);
+
+            $logoW = 160;
+            $logoH = 160;
+
+            $logoResized = imagecreatetruecolor($logoW, $logoH);
+            imagealphablending($logoResized, false);
+            imagesavealpha($logoResized, true);
+
+            $transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+            imagefill($logoResized, 0, 0, $transparent);
+
+            imagecopyresampled(
+                $logoResized,
+                $logo,
+                0,
+                0,
+                0,
+                0,
+                $logoW,
+                $logoH,
+                imagesx($logo),
+                imagesy($logo)
+            );
+
+            $dstX = 10;
+            $dstY = 150;
+
+            imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+            imagedestroy($logo);
+            imagedestroy($logoResized);
+        }
+
+
+
+        // ----------------------------
+        // SAVE IMAGE
+        // ----------------------------
+        $saveDir = FCPATH . "public/uploads/form_template_img";
         $absolutePath = "public/uploads/form_template_img";
-		if (!is_dir($saveDir)) {
-			mkdir($saveDir, 0777, true);
-		}
+        if (!is_dir($saveDir)) {
+            mkdir($saveDir, 0777, true);
+        }
 
-		$savePath = $saveDir . "/banner_" . time() . ".png";
+        $savePath = $saveDir . "/banner_" . time() . ".png";
         $absolutePath = $absolutePath . "/banner_" . time() . ".png";
-		// $savePath = $saveDir . "/banner_" . "135" . ".png";
-		imagepng($image, $savePath);
-
+        // $savePath = $saveDir . "/banner_" . "135" . ".png";
+        imagepng($image, $savePath);
+        // pr($absolutePath, 1);
         return $absolutePath;
-          
 
-		
-	}
 
-	public function generateFormSchoolTemplate($details = []){
-		
-		/**
-		 * Dynamic Banner Generator (PHP GD)
-		 */
 
-        
-		$template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_template.png";
-		$fontBold = dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
-		// pr($fontBold,1);
+    }
 
-		if (!file_exists($template)) {
-			http_response_code(500);
-			die("Template image not found: " . $template);
-		}
+    public function generateFormSchoolTemplate($details = [])
+    {
 
-		if (!file_exists($fontBold)) {
-			http_response_code(500);
-			die("Font not found: " . $fontBold . "\n\nPut a TTF font in /fonts and rename it to Roboto-Bold.ttf");
-		}
+        /**
+         * Dynamic Banner Generator (PHP GD)
+         */
 
-		// Dynamic values (GET supported)
-		$school_name     = $details['school_name'];
-		$mobile          = "M-".$details['mobile'];
-		$website         = "www.bharatidcard.com";
+
+        $template = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/school_template.png";
+        $fontBold = dirname(dirname(dirname(dirname(__DIR__)))) . "/fonts/Roboto-Bold.ttf";
+        // pr($fontBold,1);
+
+        if (!file_exists($template)) {
+            http_response_code(500);
+            die("Template image not found: " . $template);
+        }
+
+        if (!file_exists($fontBold)) {
+            http_response_code(500);
+            die("Font not found: " . $fontBold . "\n\nPut a TTF font in /fonts and rename it to Roboto-Bold.ttf");
+        }
+
+        // Dynamic values (GET supported)
+        $school_name = $details['school_name'];
+        $mobile = "M-" . $details['mobile'];
+        $website = "www.bharatidcard.com";
         $idcard_type = $details['form_type'] == "school" ? "STUDENT" : "STAFF";
-		$section         = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-".date("Y")."-".((int)date("y") + 1);
+        $section = "$idcard_type ID CARD DATA COLLECTION FORM SESSION-" . date("Y") . "-" . ((int) date("y") + 1);
 
-		// Optional: Make school name uppercase (like your sample)
-		$school_name = strtoupper(trim($school_name));
-		$mobile      = trim($mobile);
-		$website     = trim($website);
+        // Optional: Make school name uppercase (like your sample)
+        $school_name = strtoupper(trim($school_name));
+        $mobile = trim($mobile);
+        $website = trim($website);
 
-		// Load template
-		$image = imagecreatefrompng($template);
+        // Load template
+        $image = imagecreatefrompng($template);
 
-		// Enable alpha for PNG
-		imagesavealpha($image, true);
+        // Enable alpha for PNG
+        imagesavealpha($image, true);
 
-		// Colors
-		$blue      = imagecolorallocate($image, 25, 40, 130);
-		$black     = imagecolorallocate($image, 0, 0, 0);
-		$white     = imagecolorallocate($image, 251, 252, 244);
-		$lightblue = imagecolorallocate($image, 43, 53, 100);
-
-
-		// ----------------------------
-		// 1) SCHOOL NAME (height stretch)
-		// ----------------------------
-		$fontSize = 48;
-
-		// Position
-		$x = 240;
-		$y = 280;
-
-		// Height stretch factor
-		$stretchY = 1.7; // 1.0 = normal, 1.3+ = taller
-
-		// Create temp text image
-		$bbox = imagettfbbox($fontSize, 0, $fontBold, $school_name);
-		$tmpW = abs($bbox[2] - $bbox[0]) + 20;
-		$tmpH = abs($bbox[7] - $bbox[1]) + 20;
-
-		$tmp = imagecreatetruecolor($tmpW, $tmpH);
-
-		// Transparent background
-		imagealphablending($tmp, false);
-		imagesavealpha($tmp, true);
-		$transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
-		imagefill($tmp, 0, 0, $transparent);
-
-		// Draw normal text on temp
-		imagealphablending($tmp, true);
-		imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blue, $fontBold, $school_name);
-
-		// Create stretched image
-		$newH = (int)($tmpH * $stretchY);
-
-		$stretched = imagecreatetruecolor($tmpW, $newH);
-		imagealphablending($stretched, false);
-		imagesavealpha($stretched, true);
-		imagefill($stretched, 0, 0, $transparent);
-
-		// Stretch ONLY height
-		imagecopyresampled(
-			$stretched,
-			$tmp,
-			0, 0, 0, 0,
-			$tmpW, $newH,
-			$tmpW, $tmpH
-		);
-
-		// Paste on main image
-		imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
-
-		// Destroy temp images
-		imagedestroy($tmp);
-		imagedestroy($stretched);
+        // Colors
+        $blue = imagecolorallocate($image, 25, 40, 130);
+        $black = imagecolorallocate($image, 0, 0, 0);
+        $white = imagecolorallocate($image, 251, 252, 244);
+        $lightblue = imagecolorallocate($image, 43, 53, 100);
 
 
-		// ----------------------------
-		// 5) SESSION
-		// ----------------------------
-		$fontSize2 = 32;
-		$x3 = 17;
-		$y3 = 375;
-		imagettftext($image, $fontSize2, 0, $x3, $y3, $white, $fontBold, $section);
+        // ----------------------------
+        // 1) SCHOOL NAME (height stretch)
+        // ----------------------------
+        $fontSize = 48;
+
+        // Position
+        $x = 240;
+        $y = 280;
+
+        // Height stretch factor
+        $stretchY = 1.7; // 1.0 = normal, 1.3+ = taller
+
+        // Create temp text image
+        $bbox = imagettfbbox($fontSize, 0, $fontBold, $school_name);
+        $tmpW = abs($bbox[2] - $bbox[0]) + 20;
+        $tmpH = abs($bbox[7] - $bbox[1]) + 20;
+
+        $tmp = imagecreatetruecolor($tmpW, $tmpH);
+
+        // Transparent background
+        imagealphablending($tmp, false);
+        imagesavealpha($tmp, true);
+        $transparent = imagecolorallocatealpha($tmp, 0, 0, 0, 127);
+        imagefill($tmp, 0, 0, $transparent);
+
+        // Draw normal text on temp
+        imagealphablending($tmp, true);
+        imagettftext($tmp, $fontSize, 0, 10, $tmpH - 10, $blue, $fontBold, $school_name);
+
+        // Create stretched image
+        $newH = (int) ($tmpH * $stretchY);
+
+        $stretched = imagecreatetruecolor($tmpW, $newH);
+        imagealphablending($stretched, false);
+        imagesavealpha($stretched, true);
+        imagefill($stretched, 0, 0, $transparent);
+
+        // Stretch ONLY height
+        imagecopyresampled(
+            $stretched,
+            $tmp,
+            0,
+            0,
+            0,
+            0,
+            $tmpW,
+            $newH,
+            $tmpW,
+            $tmpH
+        );
+
+        // Paste on main image
+        imagecopy($image, $stretched, $x, $y - $newH, 0, 0, $tmpW, $newH);
+
+        // Destroy temp images
+        imagedestroy($tmp);
+        imagedestroy($stretched);
 
 
-		// ----------------------------
-		// SCHOOL LOGO (top center)
-		// ----------------------------
-		$logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/logo.png";
-		if (file_exists($logoPath)) {
-
-			$logo = createImageFromFile($logoPath);
-
-			$logoW = 100;
-			$logoH = 110;
-
-			$logoResized = imagecreatetruecolor($logoW, $logoH);
-			imagealphablending($logoResized, false);
-			imagesavealpha($logoResized, true);
-
-			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
-			imagefill($logoResized, 0, 0, $transparent);
-
-			imagecopyresampled(
-				$logoResized,
-				$logo,
-				0, 0, 0, 0,
-				$logoW, $logoH,
-				imagesx($logo),
-				imagesy($logo)
-			);
-
-			$dstX = 930;
-			$dstY = 21;
-
-			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
-
-			imagedestroy($logo);
-			imagedestroy($logoResized);
-		}
-
-		// ----------------------------
-		// LEFT LOGO
-		// ----------------------------
-		$achoolPath = FCPATH.$details['school_image'];
-		if (file_exists($achoolPath)) {
-
-			$logo = createImageFromFile($achoolPath);
-
-			$logoW = 160;
-			$logoH = 160;
-
-			$logoResized = imagecreatetruecolor($logoW, $logoH);
-			imagealphablending($logoResized, false);
-			imagesavealpha($logoResized, true);
-
-			$transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
-			imagefill($logoResized, 0, 0, $transparent);
-
-			imagecopyresampled(
-				$logoResized,
-				$logo,
-				0, 0, 0, 0,
-				$logoW, $logoH,
-				imagesx($logo),
-				imagesy($logo)
-			);
-
-			$dstX = 10;
-			$dstY = 150;
-
-			imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
-
-			imagedestroy($logo);
-			imagedestroy($logoResized);
-		}
+        // ----------------------------
+        // 5) SESSION
+        // ----------------------------
+        $fontSize2 = 32;
+        $x3 = 17;
+        $y3 = 375;
+        imagettftext($image, $fontSize2, 0, $x3, $y3, $white, $fontBold, $section);
 
 
-		$saveDir = FCPATH . "public/uploads/form_template_img";
+        // ----------------------------
+        // SCHOOL LOGO (top center)
+        // ----------------------------
+        $logoPath = dirname(dirname(dirname(dirname(__DIR__)))) . "/public/form_template_Img/logo.png";
+        if (file_exists($logoPath)) {
+
+            $logo = createImageFromFile($logoPath);
+
+            $logoW = 100;
+            $logoH = 110;
+
+            $logoResized = imagecreatetruecolor($logoW, $logoH);
+            imagealphablending($logoResized, false);
+            imagesavealpha($logoResized, true);
+
+            $transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+            imagefill($logoResized, 0, 0, $transparent);
+
+            imagecopyresampled(
+                $logoResized,
+                $logo,
+                0,
+                0,
+                0,
+                0,
+                $logoW,
+                $logoH,
+                imagesx($logo),
+                imagesy($logo)
+            );
+
+            $dstX = 930;
+            $dstY = 21;
+
+            imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+            imagedestroy($logo);
+            imagedestroy($logoResized);
+        }
+
+        // ----------------------------
+        // LEFT LOGO
+        // ----------------------------
+        $achoolPath = FCPATH . $details['school_image'];
+        if (file_exists($achoolPath)) {
+
+            $logo = createImageFromFile($achoolPath);
+
+            $logoW = 160;
+            $logoH = 160;
+
+            $logoResized = imagecreatetruecolor($logoW, $logoH);
+            imagealphablending($logoResized, false);
+            imagesavealpha($logoResized, true);
+
+            $transparent = imagecolorallocatealpha($logoResized, 0, 0, 0, 127);
+            imagefill($logoResized, 0, 0, $transparent);
+
+            imagecopyresampled(
+                $logoResized,
+                $logo,
+                0,
+                0,
+                0,
+                0,
+                $logoW,
+                $logoH,
+                imagesx($logo),
+                imagesy($logo)
+            );
+
+            $dstX = 10;
+            $dstY = 150;
+
+            imagecopy($image, $logoResized, $dstX, $dstY, 0, 0, $logoW, $logoH);
+
+            imagedestroy($logo);
+            imagedestroy($logoResized);
+        }
+
+
+        $saveDir = FCPATH . "public/uploads/form_template_img";
         $absolutePath = "public/uploads/form_template_img";
-		if (!is_dir($saveDir)) {
-			mkdir($saveDir, 0777, true);
-		}
+        if (!is_dir($saveDir)) {
+            mkdir($saveDir, 0777, true);
+        }
 
-		$savePath = $saveDir . "/banner_" . time() . ".png";
+        $savePath = $saveDir . "/banner_" . time() . ".png";
         $absolutePath = $absolutePath . "/banner_" . time() . ".png";
-		// $savePath = $saveDir . "/banner_" . "135" . ".png";
-		imagepng($image, $savePath);
+        // $savePath = $saveDir . "/banner_" . "135" . ".png";
+        imagepng($image, $savePath);
 
 
         return $absolutePath;
         // OUTPUT IMAGE
-		// header("Content-Type: image/png");
-		// imagepng($image);
-		// imagedestroy($image);
-		// exit;
-	}
+        // header("Content-Type: image/png");
+        // imagepng($image);
+        // imagedestroy($image);
+        // exit;
+    }
     public function generateStudentIdCard1()
     {
         ini_set('display_errors', 1);
@@ -3280,29 +3363,32 @@ class Form extends MY_Controller {
 
         $template = FCPATH . "public/id_card.png"; // blank template (no text)
         $fontBold = FCPATH . "fonts/Roboto-Bold.ttf";
-        $fontReg  = FCPATH . "fonts/Roboto-Regular.ttf";
+        $fontReg = FCPATH . "fonts/Roboto-Regular.ttf";
 
-        if (!file_exists($template)) die("Template missing: " . $template);
-        if (!file_exists($fontBold)) die("Font missing: " . $fontBold);
-        if (!file_exists($fontReg)) die("Font missing: " . $fontReg);
+        if (!file_exists($template))
+            die("Template missing: " . $template);
+        if (!file_exists($fontBold))
+            die("Font missing: " . $fontBold);
+        if (!file_exists($fontReg))
+            die("Font missing: " . $fontReg);
 
         // -------------------------
         // Dynamic values
         // -------------------------
         $schoolName = "INGOUDE ACADEMY";
         $schoolAddr = "123 Anywhere St, Any City, ST 12345";
-        $photoPath  = FCPATH . "public/no-image.jpg"; // student photo (png)
+        $photoPath = FCPATH . "public/no-image.jpg"; // student photo (png)
 
         $fields = [
-            "Name"        => "GAYATRI HEDAUA",
+            "Name" => "GAYATRI HEDAUA",
             "Father Name" => "Mr. NARAYAN",
             "Mother Name" => "Miss. LATA HEDAUA",
-            "Phone"       => "9876543210",
+            "Phone" => "9876543210",
             "Blood Group" => "O+",
-            "Address"     => "123 Anywhere St, Any City, ST 12345asdks",
-            "Phone1"       => "9876543210",
+            "Address" => "123 Anywhere St, Any City, ST 12345asdks",
+            "Phone1" => "9876543210",
             "Blood Group1" => "O+",
-            "Address1"     => "123 Anywhere St, Any City, ST 12345asdks",
+            "Address1" => "123 Anywhere St, Any City, ST 12345asdks",
         ];
         $srialNumber = "Sr. No. : 1";
 
@@ -3368,8 +3454,12 @@ class Form extends MY_Controller {
             imagecopyresampled(
                 $resized,
                 $photo,
-                0, 0, 0, 0,
-                $photoW, $photoH,
+                0,
+                0,
+                0,
+                0,
+                $photoW,
+                $photoH,
                 imagesx($photo),
                 imagesy($photo)
             );
@@ -3396,7 +3486,7 @@ class Form extends MY_Controller {
         $maxValueWidth = 320;
 
         $i = 0;
-        
+
         foreach ($fields as $label => $value) {
 
             $y = $startY + ($i * $rowGap);
@@ -3428,7 +3518,8 @@ class Form extends MY_Controller {
         // Save + Output
         // -------------------------
         $saveDir = FCPATH . "public/id_cards/";
-        if (!is_dir($saveDir)) mkdir($saveDir, 0777, true);
+        if (!is_dir($saveDir))
+            mkdir($saveDir, 0777, true);
 
         $fileName = "student_card_1.png";
         imagepng($img, $saveDir . $fileName);
@@ -3438,7 +3529,7 @@ class Form extends MY_Controller {
         imagedestroy($img);
         exit;
     }
-    public function generateStudentIdCard($idCardData = array(),$school_data = array(),$file_name = [])
+    public function generateStudentIdCardOld($idCardData = array(), $school_data = array(), $file_name = [])
     {
         // ini_set('display_errors', 1);
         // ini_set('display_startup_errors', 1);
@@ -3568,19 +3659,19 @@ class Form extends MY_Controller {
         // 1) Generate all cards
         $school_detail = [
             "school_name" => $school_data['name'],
-            "school_address" => $school_data['address']    
+            "school_address" => $school_data['address']
         ];
         $generatedCards = [];
         foreach ($fields as $i => $student) {
-            
-            $extraFeilds = array_column($student['other_data'],"value","key");
+
+            $extraFeilds = array_column($student['other_data'], "value", "key");
             $image = $student['image'];
             $sr_no = $student['sr_no'];
-            
-            $generatedCards[] = $this->generateSingleStudentCard($extraFeilds, $sr_no,$image,$school_detail);
+
+            $generatedCards[] = $this->generateSingleStudentCard($extraFeilds, $sr_no, $image, $school_detail);
         }
 
-        
+
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator('ID Card System');
@@ -3666,8 +3757,192 @@ class Form extends MY_Controller {
         $pdf->Output($file_name != "" && $file_name != null ? $file_name : "student_id_cards.pdf", "D");
         exit;
     }
+    public function generateStudentIdCard($idCardData = array(), $school_data = array(), $file_name = [])
+    {
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $idCardData[] = $idCardData[0];
+        $fields = $idCardData;
 
-    public function rowGap($student){
+        // Card layout constants (mm)
+        $cardW = 86;
+        $cardH = 34;
+        $colGap = 5;    // horizontal gap between the 2 cards in a row
+        $rowGap = 1;    // vertical gap between card rows
+        $marginL = 10;   // page left margin
+        $marginT = 10;   // page top margin
+        $marginR = 10;   // page right margin
+
+        // Left panel (sr_no + photo)
+        $leftPanelW = 24;   // mm
+
+        // Photo box inside left panel
+        $photoBoxPad = 1.5;
+        $photoBoxX_r = $photoBoxPad;          // relative to card left
+        $photoBoxY_r = 6.5;                   // relative to card top (below sr_no)
+        $photoBoxW = $leftPanelW - ($photoBoxPad * 2);
+        $photoBoxH = $cardH - $photoBoxY_r - $photoBoxPad;
+
+        // Right panel
+        $rightPanelX_r = $leftPanelW + 1.0;  // relative to card left
+        $rightPanelW = $cardW - $leftPanelW - 1.5;
+        // Label / dash / value column proportions
+        $labelColPct = 0.28; // Tighter label column
+        $dashColW = 3.0;
+
+        // Build TCPDF
+        require_once APPPATH . 'libraries/Pdf1.php';
+        $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('ID Card System');
+        $pdf->SetAuthor('ID Card System');
+        $pdf->SetTitle('Student ID Cards');
+        $pdf->SetPrintHeader(false);
+        $pdf->SetPrintFooter(false);
+        $pdf->SetAutoPageBreak(false, 0);
+        $pdf->SetMargins($marginL, $marginT, $marginR);
+        $pdf->AddPage();
+
+        $pageH = $pdf->getPageHeight();
+        $col = 0;
+        $row = 0;
+
+        foreach ($fields as $i => $student) {
+            $extraFields = array_column($student['other_data'], 'value', 'key');
+            $image = $student['image'];
+            $sr_no = $student['sr_no'];
+
+            $cardX = $marginL + $col * ($cardW + $colGap);
+            $cardY = $marginT + $row * ($cardH + $rowGap);
+
+            if (($cardY + $cardH) > ($pageH - 5)) {
+                $pdf->AddPage();
+                $row = 0;
+                $col = 0;
+                $cardX = $marginL;
+                $cardY = $marginT;
+            }
+
+            // Outer border
+            $pdf->SetLineWidth(0.3);
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->Rect($cardX, $cardY, $cardW, $cardH, 'D');
+
+            // Vertical divider
+            $dividerX = $cardX + $leftPanelW;
+            $pdf->Line($dividerX, $cardY, $dividerX, $cardY + $cardH);
+
+            // LEFT PANEL: Sr. No. 
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetXY($cardX, $cardY + 0.8);
+            $pdf->Cell($leftPanelW, 5, $sr_no, 0, 0, 'C');
+
+            // Photo box
+            $photoAbsX = $cardX + $photoBoxX_r;
+            $photoAbsY = $cardY + $photoBoxY_r;
+            $pdf->SetLineWidth(0.25);
+            $pdf->Rect($photoAbsX, $photoAbsY, $photoBoxW, $photoBoxH, 'D');
+
+            if (!empty($image) && is_string($image)) {
+                $photoLocal = str_replace(base_url(), FCPATH, $image);
+                if (file_exists($photoLocal)) {
+                    $pdf->Image($photoLocal, $photoAbsX + 0.3, $photoAbsY + 0.3, $photoBoxW - 0.6, $photoBoxH - 0.6, '', '', '', true, 150, '', false, false, 0, 'CM');
+                }
+            }
+
+            // RIGHT PANEL: Label - Value rows
+            $rightAbsX = $cardX + $rightPanelX_r;
+            $numFields = count($extraFields);
+
+            if ($numFields > 0) {
+                $availH = $cardH - 1.5;
+                $rowH = $availH / $numFields;
+                // Cap the row height so few elements don't spread too far apart
+                if ($rowH > 3.6) {
+                    $rowH = 3.6;
+                }
+                $labelColW = $rightPanelW * $labelColPct;
+                $valueColW = $rightPanelW - $labelColW - $dashColW;
+
+                $maxFS = 8.0;
+                $minFS = 3.0;
+
+                // Restrict global max font size by available row height
+                $maxFSByRowH = ($rowH / 1.35) / 0.352778;
+                if ($maxFS > $maxFSByRowH) {
+                    $maxFS = floor($maxFSByRowH * 10) / 10;
+                }
+
+                $pdf->SetTextColor(0, 0, 0);
+
+                $r = 0;
+                foreach ($extraFields as $lbl => $val) {
+                    $rowY = $cardY + 0.75 + ($r * $rowH);
+
+                    // Compute best font size for the label
+                    $lblFS = $minFS;
+                    for ($fs = $maxFS; $fs >= $minFS; $fs -= 0.1) {
+                        $pdf->SetFont('helvetica', 'B', $fs);
+                        if ($pdf->GetStringWidth((string) $lbl) <= ($labelColW - 0.3)) {
+                            $lblFS = $fs;
+                            break;
+                        }
+                    }
+
+                    // Compute best font size for the value
+                    $valFS = $minFS;
+                    for ($fs = $maxFS; $fs >= $minFS; $fs -= 0.1) {
+                        $pdf->SetFont('helvetica', '', $fs);
+                        if ($pdf->GetStringWidth((string) $val) <= ($valueColW - 0.3)) {
+                            $valFS = $fs;
+                            break;
+                        }
+                    }
+
+                    $pdf->SetXY($rightAbsX, $rowY);
+                    $pdf->SetFont('helvetica', 'B', $lblFS);
+                    $pdf->Cell($labelColW, $rowH, (string) $lbl, 0, 0, 'L', false, '', 1);
+
+                    $pdf->SetXY($rightAbsX + $labelColW, $rowY);
+                    $pdf->SetFont('helvetica', 'B', $maxFS); // Keep colon standard size and bold
+                    $pdf->Cell($dashColW, $rowH, ':', 0, 0, 'C');
+
+                    $pdf->SetXY($rightAbsX + $labelColW + $dashColW, $rowY);
+                    $pdf->SetFont('helvetica', '', $valFS);
+                    $pdf->Cell($valueColW, $rowH, (string) $val, 0, 0, 'L', false, '', 1);
+
+                    $r++;
+                }
+            }
+
+            $col++;
+            if ($col >= 2) {
+                $col = 0;
+                $row++;
+            }
+        }
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+        $pdf->Output($file_name != "" && $file_name != null ? $file_name : "student_id_cards.pdf", "D");
+        exit;
+    }
+
+
+    public function rowGap($student)
+    {
         switch (count($student)) {
             case 2:
             case 3:
@@ -3686,8 +3961,8 @@ class Form extends MY_Controller {
                 $rowGap = 38;
                 break;
             case 12:
-            $rowGap = 34;
-            break;
+                $rowGap = 34;
+                break;
             default:
                 $rowGap = 31;
                 break;
@@ -3696,15 +3971,18 @@ class Form extends MY_Controller {
     }
 
 
-    private function generateSingleStudentCard($student, $index = 1,$image = "",$school_detail = array())
+    private function generateSingleStudentCard($student, $index = 1, $image = "", $school_detail = array())
     {
         $template = FCPATH . "public/id_card.png";
         $fontBold = FCPATH . "fonts/Roboto-Bold.ttf";
-        $fontReg  = FCPATH . "fonts/Roboto-Regular.ttf";
+        $fontReg = FCPATH . "fonts/Roboto-Regular.ttf";
 
-        if (!file_exists($template)) die("Template missing: " . $template);
-        if (!file_exists($fontBold)) die("Font missing: " . $fontBold);
-        if (!file_exists($fontReg)) die("Font missing: " . $fontReg);
+        if (!file_exists($template))
+            die("Template missing: " . $template);
+        if (!file_exists($fontBold))
+            die("Font missing: " . $fontBold);
+        if (!file_exists($fontReg))
+            die("Font missing: " . $fontReg);
 
         // -------------------------
         // Dynamic values
@@ -3713,9 +3991,9 @@ class Form extends MY_Controller {
         $schoolAddr = $school_detail['school_address'];
         // $schoolName  = "INGOUDE ACADEMY";
         // $schoolAddr  = "123 Anywhere St, Any City, ST 12345";
-        $photoPath   = $image != "" && $image != null ? str_replace(base_url(),FCPATH,$image) : FCPATH . "public/no-image.jpg"; // you can make dynamic later
+        $photoPath = $image != "" && $image != null ? str_replace(base_url(), FCPATH, $image) : FCPATH . "public/no-image.jpg"; // you can make dynamic later
         $srialNumber = "Sr. No. : " . $index;
-        
+
         // -------------------------
         // Load template
         // -------------------------
@@ -3779,7 +4057,7 @@ class Form extends MY_Controller {
             } else {
                 die("Invalid image format. Only PNG, JPG, JPEG allowed.");
             }
-            
+
 
             $resized = imagecreatetruecolor($photoW, $photoH);
             imagealphablending($resized, false);
@@ -3791,8 +4069,12 @@ class Form extends MY_Controller {
             imagecopyresampled(
                 $resized,
                 $photo,
-                0, 0, 0, 0,
-                $photoW, $photoH,
+                0,
+                0,
+                0,
+                0,
+                $photoW,
+                $photoH,
                 imagesx($photo),
                 imagesy($photo)
             );
@@ -3810,7 +4092,7 @@ class Form extends MY_Controller {
         $valueX = 620;
 
         $startY = 228;
-        
+
 
         $labelFontSize = 17;
         $valueFontSize = 17;
@@ -3845,7 +4127,8 @@ class Form extends MY_Controller {
         // Save PNG
         // -------------------------
         $saveDir = FCPATH . "public/id_cards/";
-        if (!is_dir($saveDir)) mkdir($saveDir, 0777, true);
+        if (!is_dir($saveDir))
+            mkdir($saveDir, 0777, true);
 
         $fileName = "student_card_" . $index . ".png";
         $fullPath = $saveDir . $fileName;
@@ -3879,43 +4162,44 @@ class Form extends MY_Controller {
 
 
 
-/**
- * Pixel width based wrap (BEST for GD)
- */
-private function wrapTextByWidth($text, $fontFile, $fontSize, $maxWidth)
-{
-    $text = trim($text);
-    if ($text === '') return [''];
+    /**
+     * Pixel width based wrap (BEST for GD)
+     */
+    private function wrapTextByWidth($text, $fontFile, $fontSize, $maxWidth)
+    {
+        $text = trim($text);
+        if ($text === '')
+            return [''];
 
-    $words = preg_split('/\s+/', $text);
-    $lines = [];
-    $currentLine = "";
+        $words = preg_split('/\s+/', $text);
+        $lines = [];
+        $currentLine = "";
 
-    foreach ($words as $word) {
+        foreach ($words as $word) {
 
-        $testLine = ($currentLine === "") ? $word : $currentLine . " " . $word;
+            $testLine = ($currentLine === "") ? $word : $currentLine . " " . $word;
 
-        $box = imagettfbbox($fontSize, 0, $fontFile, $testLine);
-        $lineWidth = $box[2] - $box[0];
+            $box = imagettfbbox($fontSize, 0, $fontFile, $testLine);
+            $lineWidth = $box[2] - $box[0];
 
-        if ($lineWidth > $maxWidth) {
-            if ($currentLine !== "") {
-                $lines[] = $currentLine;
+            if ($lineWidth > $maxWidth) {
+                if ($currentLine !== "") {
+                    $lines[] = $currentLine;
+                }
+                $currentLine = $word;
+            } else {
+                $currentLine = $testLine;
             }
-            $currentLine = $word;
-        } else {
-            $currentLine = $testLine;
         }
+
+        if ($currentLine !== "") {
+            $lines[] = $currentLine;
+        }
+
+        return $lines;
     }
 
-    if ($currentLine !== "") {
-        $lines[] = $currentLine;
-    }
 
-    return $lines;
-}
-
-  
 
 }
 

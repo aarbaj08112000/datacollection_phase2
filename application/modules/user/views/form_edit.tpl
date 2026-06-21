@@ -164,8 +164,8 @@
           
           <div class="col-md-4 mt-3 course-row-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%> <%if $school_data['form_type'] eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
-            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class</span><span class="text-danger ms-1">*</span><span  data-toggle="tooltip" title="Class predefined values are available in the dropdown. You can select multiple options if required. If you need a new class value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
-            <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select class" name="course" />
+            <label for="url" class="form-label fs-"><span class="courser-tag fs-6">Class / Course</span><span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="Class predefined values are available in the dropdown. You can select multiple options if required. If you need a new class value, type it in the input box and press Enter to add it to the list." ><i sy class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;font-size: 190% !important;"></i></span></label>
+            <input id="courseToken" type="text" class="form-control autocomplete" placeholder="Select class / course" name="course" />
             </div>
           </div>
           <div class="col-md-4 mt-3 section-box <%if $form_type eq 'office'%>hide<%/if%>">
