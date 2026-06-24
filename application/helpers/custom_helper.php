@@ -271,7 +271,7 @@ function sent_otp($otp = "",$mobile_number=""){
         $response = curl_exec($ch);
         // Check for errors
         if(curl_errno($ch)) {
-            echo 'Error while doing digital signature : ' . curl_error($ch);
+            echo '' . curl_error($ch);
             exit();
         }
     

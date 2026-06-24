@@ -1106,6 +1106,7 @@ class Form extends MY_Controller
         $school_data = $form_edit_val['channel_patner_id'] > 0 ? $form_edit_val["extra_json"] : $this->session->userdata("extra_json");
         $user_role = $this->session->userdata("role");
         $url = $post_data['url'];
+        // pr($url,1);
         $user_role = $form_edit_val['user_role'];
         $school_data = $user_role == "School" || $user_role == "ChannelPartner" ? (array) json_decode($form_edit_val['extra_json']) : [];
         if (count($school_data) == 0 && $form_edit_val['channel_patner_id'] > 0) {
@@ -1123,7 +1124,7 @@ class Form extends MY_Controller
             $school_name = preg_replace('/\s+/', '_', $school_name);
             $school_name = strtoupper($school_name);
             // pr($name,1);
-            $post_data['url'] = $url = $name . "_" . $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
+            // $post_data['url'] = $url = $name . "_" . $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
             $template_details = [
                 "school_name" => $school_name_val,
                 "mobile" => "" . $school_data['school_contact_no'] . ", " . $post_data['mobile_number'] . "",
@@ -1138,7 +1139,7 @@ class Form extends MY_Controller
             $school_name = preg_replace('/\s+/', '_', $school_name);
             $school_name = strtoupper($school_name);
             // pr($name,1);
-            $post_data['url'] = $url = $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
+            // $post_data['url'] = $url = $school_name . "_" . $form_heder_type . "_" . date("d_M_Y_h_i_s_A");
             $template_details = [
                 "school_name" => $school_name_val,
                 "mobile" => "" . $school_data['school_contact_no'] . ", " . $post_data['mobile_number'] . "",
@@ -1254,7 +1255,7 @@ class Form extends MY_Controller
             $data = array(
                 'name' => $this->input->post('name'),
                 'image' => $school_image,
-                'url' => $url,
+                // 'url' => $url,
                 'form_type' => $form_type,
                 "contact_person" => $post_data['contact_person'],
                 "mobile_number" => $post_data['mobile_number'],
@@ -3824,7 +3825,7 @@ class Form extends MY_Controller
             }
 
             // Outer border
-            $pdf->SetLineWidth(0.3);
+            $pdf->SetLineWidth(0.1);
             $pdf->SetDrawColor(0, 0, 0);
             $pdf->Rect($cardX, $cardY, $cardW, $cardH, 'D');
 
@@ -3841,7 +3842,7 @@ class Form extends MY_Controller
             // Photo box
             $photoAbsX = $cardX + $photoBoxX_r;
             $photoAbsY = $cardY + $photoBoxY_r;
-            $pdf->SetLineWidth(0.25);
+            $pdf->SetLineWidth(0.1);
             $pdf->Rect($photoAbsX, $photoAbsY, $photoBoxW, $photoBoxH, 'D');
 
             if (!empty($image) && is_string($image)) {
@@ -3901,7 +3902,7 @@ class Form extends MY_Controller
                     }
 
                     $pdf->SetXY($rightAbsX, $rowY);
-                    $pdf->SetFont('helvetica', 'B', $lblFS);
+                    $pdf->SetFont('helvetica', '', $valFS - 0.2);
                     $pdf->Cell($labelColW, $rowH, (string) $lbl, 0, 0, 'L', false, '', 1);
 
                     $pdf->SetXY($rightAbsX + $labelColW, $rowY);

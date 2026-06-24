@@ -173,7 +173,7 @@
             <label for="url" class="form-label fs-6">Section<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="Section predefined values are available in the dropdown. You can select multiple options if required. If you need a new section value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="sectionToken" type="text" class="form-control autocomplete" placeholder="Select section" name="section" />
             </div>
-          </div><div class="col-md-4 mt-3 section-box <%if ($user_role eq 'ChannelPartner' || $user_role eq 'School') && $school_data['form_type'] eq 'office'%>hide<%/if%> <%if $school_data['form_type'] neq 'office'%>hide<%/if%>">
+          </div><div class="col-md-4 mt-3 section-box <%if $form_type eq 'office'%>hide<%/if%>">
             <div class="autocomplete-box">
             <label for="url" class="form-label fs-6">House<span class="text-danger ms-1"></span><span  data-toggle="tooltip" title="If you need a house value, type it in the input box and press Enter to add it to the list." ><i class="ti ti-info-circle ms-2 fs-large" style="position: relative;top: 5px;"></i></span></label>
             <input id="houseToken" type="text" class="form-control autocomplete" placeholder="Select house" name="house" />
