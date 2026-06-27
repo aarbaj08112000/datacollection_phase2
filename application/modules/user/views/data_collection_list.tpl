@@ -30,7 +30,9 @@
            <%if !in_array($session_data['role'],$roles) %>
          <a class="btn btn-seconday card-generated-row" type="button" title="Card Generated" href="javascript:void(0)">Card Generated</a>
          <%/if%>
+         <%if !in_array($session_data['role'],["ChannelPartner","School"])%>
         <a class="btn btn-seconday export-ids" type="button" title="Download All Id Cards" href="javascript:void(0)"><i class="ti ti-id-badge-2"></i></a>
+        <%/if%>
          <%if $file_column_exist && $session_data['role'] neq 'Employee' && $images_available == "Yes"%> 
           <a class="btn btn-seconday export-images" type="button" title="Download All images" href="javascript:void(0)"><i class="ti ti-photo-down"></i></a> 
          <%/if%>

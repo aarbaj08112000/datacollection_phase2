@@ -300,6 +300,7 @@ class Form extends MY_Controller
         $is_deleted = $post_data['data']['is_deleted'];
         $status = $post_data['data']['filter_status'];
         $data = $this->Form_model->getSchoolData($condition_arr, $post_data["search"], $is_deleted, $status);
+        // pr($this->db->last_query(),1);
         foreach ($data as $key => $val) {
             $data[$key]['image'] = "<img src='" . base_url($val['image']) . "' alt='' width='75' height='75' title='College Logo'>";
             $data[$key]['url'] = '<a href="' . base_url("form/" . base64_encode($val['url'])) . '" target="_blank">' . base_url("form/" . base64_encode($val['url'])) . '</a>';
@@ -1101,6 +1102,8 @@ class Form extends MY_Controller
             unlink($template_old);
         }
         $form_edit_val = $this->Form_model->getSchoolFormWithAddedBy($post_data['school_id']);
+        $is_old_record = $form_edit_val['record_type'] == "Old" ? true :  false;
+        $display_template = $form_edit_val['display_template'];
         $_POST['name'] = $_POST['school_name'];
         $form_type = $this->input->post('form_heder_type');
         $school_data = $form_edit_val['channel_patner_id'] > 0 ? $form_edit_val["extra_json"] : $this->session->userdata("extra_json");
@@ -1228,7 +1231,7 @@ class Form extends MY_Controller
         // }
 
         $template_image = "";
-        if ((!(count($upload_error_msg) > 0) || (is_array($template_error_msg) && count($template_error_msg) > 0))) {
+        if ((!(count($upload_error_msg) > 0) || (is_array($template_error_msg) && count($template_error_msg) > 0)) && !$is_old_record) {
             $template_details['school_image'] = $school_image;
             $template_details['form_type'] = $form_type;
             if ($user_role == "ChannelPartner") {
@@ -1241,6 +1244,8 @@ class Form extends MY_Controller
             if (file_exists($template_old)) {
                 unlink($template_old);
             }
+        }else{
+            $template_image = $display_template;
         }
 
         $ret_arr = [];
